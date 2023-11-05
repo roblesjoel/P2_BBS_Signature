@@ -6,12 +6,17 @@
 
 % Set page size and margins
 % Replace `letterpaper' with `a4paper' for UK/EU standard size
-\usepackage[a4paper,top=2cm,bottom=2cm,left=3cm,right=3cm,marginparwidth=1.75cm]{geometry}
+\usepackage[letterpaper,top=2cm,bottom=2cm,left=3cm,right=3cm,marginparwidth=1.75cm]{geometry}
 
 % Useful packages
 \usepackage{amsmath}
 \usepackage{graphicx}
 \usepackage[colorlinks=true, allcolors=blue]{hyperref}
+\usepackage{tabularx}
+\usepackage{booktabs}
+\usepackage{hyperref}
+\usepackage[colorlinks=true,allcolors=blue]{hyperref}
+\usepackage{float}
 
 \title{Top Level of BBS}
 \author{Joel Gabriel Robles Gasser \& Miguel Angel Schweizer}
@@ -20,40 +25,45 @@
 \maketitle
 
 \begin{abstract}
+Your abstract.
 \end{abstract}
 
-\section{Introduction}
+\tableofcontents
 
+
+\section{Introduction}
+Digital signature schemes are vital cryptographic protocols nowadays and are used everywhere. They enable the generation of a digital signature using a private key and the verification of that signature using a public key. 
 
 \section{Building Blocks}
 
 \subsection{Self-Sovereign Identity}
 
-Self-sovereign identity is a model managing digital identities. In this model the core concept is that individuals or coorperations have the complete ownership and control of their accounts and personal data.
+Self-sovereign identity is a model for managing digital identities. In this model the core concept is that individuals or corporations have the complete ownership and control of their accounts and personal data.
 
 \subsection{Verifiable Credentials}
 
-Verifiable credentials, also known as VCs, are a W3C standard for digital, cryptographically verifiable credentials. The VCs are stored on digital devices and use cryptography to verify the data and the authorship of the credentials.
+Verifiable credentials, also known as VC, are a W3C standard for digital, cryptographically verifiable credentials. The VCs are stored on digital devices and use cryptography to verify the data and the authorship of the credentials.
 
 \subsection{Trust Triangle}
 
-The trust triangle is a very important model for the BBS signature scheme, which provides the characteristics to the scheme and makes it work. 
-We have three-way relationship between parties which are issuer, holder and verifier. 
-The signer signs the messages from the holder and sends them back.
-The holder handles proof generation of the signature and the messages. He sends the messages he wants to have signed to the signer. He also sends the generated proof and the disclosed messages to the verifier.
+The trust triangle is a very important model for the BBS signature scheme, which provides the characteristics to the scheme and make the whole thing work between the parties. 
+We have three-way relationship between parties which are signer, holder and verifier. 
+The signer is the party which signs and sends the messages from the holder and sends them back to the holder.
+The holder makes proof generation of the signature and the messages. He sends the messages he wants to have signed to the signer. He also sends his generated proof and the disclosed messages to the verifier.
 The verifier verifies the proof he receives from the holder.
-%The holder trusts the signer because he sends him his messages to be signed. The verifier trust the signer because he signed the messages of the holder. 
-%That is how the triangle of trust works. 
+The holder trusts the signer because he sends him his messages to be signed. The verifier trust the signer because he signed the messages of the holder. 
+That is how the triangle of trust works. 
 
 \subsection{Proof of knowledge \& Zero Knowledge Proof}
 
-A lower version of zero-knowledge proof is proof-of-knowledge. Proof-of-knowledge has the two characteristics of completeness and soundness. Completeness means that if the proof is true, thus the verifier can be convinced by the holder that they possess knowledge about the correct proof. Soundness is the opposite of completeness, if the proof is false, then no holder can convince a verifier that they possess knowledge about the proof. Zero-knowledge-proof adds a characteristic known as zero-knowledge. This says that if a proof is true, then the verifier learns nothing more from the holder other than the proof is true.
+A lower version of zero-knowledge proof is the proof-of-knowledge. Proof-of-knowledge has the two characteristics of Completeness and Soundness. Completeness means that if the proof is true, the the verifier can be convinced by the holder that they possess knowledge about the correct proof. Soundness is the opposite of completeness, if the proof is false, then no holder can convince a verifier that they possess knowledge about the proof. Zero-knowledge proof adds a characteristic known as zero-knowledge. This says that if a proof is true, then the verifier learns nothing more from the holder other than the proof is true.
+
 
 \section{Properties of BBS}
 
 \subsection{Selective Disclosure}
 
-With the BBS signature scheme we can sign multiple messages at once. This allows the holder to generate a proof of the messages and the signature. The holder itself can choose which message he wants to disclose, while revealing no-information about the undisclosed messages. The proof is a guarantee of integrity and authenticity of the disclosed message.
+With BBS signature scheme we can sign multiple messages and produce a single output signature. This allows the holder to generate a proof of the messages and the signature. The holder itself can choose which message he wants to disclose, while revealing no-information about the undisclosed messages . The proof is a guarantee of integrity and authenticity of the disclosed message.
 
 \subsection{Unlinkable Proofs}
 
@@ -61,15 +71,143 @@ The holder generates a proof, which is known as a zero-knowledge proof. In our c
 
 \subsection{Proof of Possession}
 
-The proof of possession means that the proofs generated by the holder, prove to a verifier that the holder was in possession of a signature without revealing the signature itself. The BBS signature scheme supports the binding of headers to the generated proof which hold additional information. 
+The proof of possession means that the proofs generated by the scheme of the holder prove tot a verifier that the holder was in possession of a signature without revealing the signature itself. With the BBS signature scheme supports the binding of headers to the generated proof and hold additional information. 
 
 \subsection{Link Secrets}
 
-Link secrets enable more trusted interactions with verifiable credentials. With a cryptographic commitment algorithm the holder creates a commitment, which allows the holder to prove his/her knowledge of the secret without revealing it. The holder can send the commitment to the signer, which signs it together with the credential attributes, while the secret is never shared. The link secret is a large random number and called master secret. 
-It is called link secret, because the master secret is inserted and signed in different credentials. By adding it in every credential, it links the holder to the credentials and link the credentials to each other. The master secret is randomized by a blinding algorithm at every issuance of a credential. The master secret is kept secret at every time and is never revealed by the holder. Only the commitments and proofs of knowledge of the committed secret are shared.
+Link secret enables more trusted interactions with verifiable credentials. With a cryptographic commitment algorithm the holder creates a commitment, which allows the holder to prove it knows the secret without revealing it. The holder can send the commitment to the signer, which signs it together with the credential attributes, while the secret is never shared. The link secret is a large random number and called master secret. 
+It is called link secret, because the master secret is inserted and signed in different credentials. By adding it in every credential, it links the holder to the credentials and link the credentials to each other. The master secret is randomized by a blinding algorithm at every issuance of a credential. The master secret is kept secret at every time and is never revealed by the holder. Only the commitments and proofs of knowledge pf the committed secret are shared.
 
-%\cite{latex2e}
+\section{BLS12-381 Curve}
+\begin{figure}[H]
+\centering
+\caption{BLS12-381 curve}
+\label{Fig: BLS12-381}
+\end{figure}
+
+\subsection{Elliptic Curves}
+
+In the ever-evolving landscape of cybersecurity, the need for robust encryption methods to safeguard digital communication and protect sensitive information has never been more critical. At the forefront of this cryptographic revolution stands Elliptic Curve Cryptography (ECC), a powerful and elegant branch of mathematics that has become indispensable in modern security protocols and cryptographic systems. 
+Elliptic curves are defined over a field \textit{K} and describes points in \(K^2\).
+
+\subsection{Pairing-based Cryptography}
+
+Pairing-based cryptography is a specialized branch of cryptography that utilizes mathematical structures known as pairings to enable advanced cryptographic operations and protocols. These pairings establish connections between points on elliptic curves.
+
+The core concept behind pairing-based cryptography is the computation of a bilinear map that takes two elements from a given set and maps them to another set while preserving certain algebraic properties. This bilinear map allows for the creation of cryptographic protocols and systems that were previously challenging or impossible to achieve with traditional cryptographic techniques.
+
+Pairing-friendly elliptic curves are special elliptic curves used in cryptography, and they have efficient bilinear pairings. A bilinear pairing is a map:
+\begin{center}
+\(e:G_1\times G_2 \xrightarrow{} G_T\)
+\end{center}
+Where \(G_1\), \(G_2\), and \(G_T\) are cyclic groups. \(G_1\) and \(G_2\) are often groups of points on elliptic curves, while \(G_T\) is a multiplicative group in a field extension of the base field.
+
+\subsection{About BLS12-381}
+
+\subsubsection{History}
+
+BLS12-381 was was designed by Sean Bowe in 2017. It was first used for an upgrade to Zcash protocol. The curve is a pairing-friendly curve, which makes it efficient for digital signatures. In the draft of IETF is BLS12-381 included with recommended parameters for a good security. \newline
+It's naming comes from the familiy of curves described by Barreto, Lynn and Scott (BLS). The 12 is the embedding degree of the curve. The embedding degree will be discussed later on. The 381 is the number of bits needed to represent coordinates on the curve. This is also known as the size of the field modulus \textit{q}. These coordinates come from a finite field that has a prime order. This prime order has, in our case, the prime number \textit{q} which length is 381 bits.
+
+\subsubsection{Curve Equation And Parameters}
+In the following section there will be no specific explanation of the mathematics used for the parameters. \newline
+\begin{center}
+The equation for the BLS12-381 curve is \(y^2=x^3+4\). \\
+\end{center}
+It is important by the parametrization to optimize the pairing perfomance by chosing a parametrizaction with a low Hamming weight. Essential are the base field modulus \textit{q} and the subgroup order \textit{r}. The goal is to find a \textit{X} that solves these two equations:
+\begin{center}
+\begin{itemize}
+    \item \(q = (X -1)^2((X^4 -X^2+1)/3) + X\)
+    \item \(r = (X^4-X^2+1)\)
+\end{itemize}
+\end{center}
+In the BLS12-381 we have some parameters we have to set. But luckily there are some suggestions in the draft of the IETF to use for achieving a certain security level. \\
+We want to achieve a security level of 128 bits. With the table provided from the paper \textbf{A Taxonomy of Pairing-friendly elliptic curves} we are given which parameters we have to choose for achieving the desired security level.\\
+We have the parameter \textbf{\textit{r}} which stand for the subgroup size in bits. As we want a security level of 128 bits our subgroup size has to be 256 bits long. Parameter \textbf{\textit{\(q^k\)}} has to be over 3000 bits and our embedding degree \textbf{\textit{k}} will be 12. With these constraints we have a design goal for our implementation of the BLS12-381 curve. \\
+\begin{table}[h!]
+    \centering
+    \begin{tabularx}{\textwidth}{lXXXXX}
+        \toprule
+        Security level (in bits) & Subgroup size $r$ (in bits) & Extension field size $q^k$ (in bits) & Embedding degree $k$ $\rho \approx 1$  \\
+        \midrule
+        80  & 160 & 960 -- 1280  & 6 -- 8   \\
+        112 & 224 & 2200 -- 3600 & 10 -- 16  \\
+        128 & 256 & 3000 -- 5000 & 12 -- 20  \\
+        192 & 384 & 8000 -- 10000& 20 -- 26  \\
+        256 & 512 & 14000 -- 18000&28 -- 36  \\
+        \bottomrule
+    \end{tabularx}
+    \caption{Security parameters and their respective values.}
+\end{table}
+
+\subsubsection{Field Extensions}
+Elliptic curves are defined over a field \textit{K} and describes points in \(K^2\).
+Field extensions are fundamental to elliptic curve pairings. The reason field extensions are important in pairing-friendly elliptic curves is that the target group \(G_T\) of the pairing is typically a group of order \textit{n} in a field extension \(F_{q^k}\) of the field \(F_q\) over which the elliptic curve is defined. For many cryptographic applications, this extension degree \textit{k} is crucial, as the efficiency and security of the system can depend on it. \\
+In BLS12-381 we make a field extension from \(F_q\) to \(F_{q^{12}}\) what means the twelfth extension of \(F_q\). In the field \(F_{q^{12}}\) we find our Group \(G_T\).
+
+\subsubsection{Curve}
+In BLS12-381 we deal with two curves, one in the \(F_q\) field and the other in the extended \(F_{q^{12}}\) field. \\
+The first curve is a simple curve in the \(F_q\) field. It consists of integers modulus \textit{q} that solve the equation \(y^2 = x^3 + 4\) for parameters \textit{x} and \textit{y}. The integers of \textit{x} and \textit{y} are each less than \textit{q}. The name of this curve is \(E(F_q)\). \\
+The second curve is over the extension from \(F_q\) to \(F_{q^2}\). The equation for this curve is \(y^2 = x^3 + 4(1+i)\). This equation contains complex numbers, which will not be explained, but are crucial for the pairing-based elliptic curves. The second curve is named \(E'(F_{q^2})\). Doing arithmetic in \(F_{q^{12}}\) is extremely complicated and inefficient. That's because we're using a twist. The twist consists of a coordinate transformation from the \(F_{q^{12}}\) field into a lower degree field which still has an subgroup of order \textit{r}. The BLS12-381 has a "sextic twist", which means that it reduces the degree of the extension field by the factor six. That said, we have our \(G_2\) in a field of \(F_{q^2}\) instead of \(F_{q^{12}}\) which facilitates the calculations and enhances the efficiency of the BLS12-381 curve. \break
+Our two groups we will be using are: \\
+\begin{center}
+\begin{itemize}
+    \item \(G_1 \subset E(F_q)\) where \(E : y^2 = x^3 + 4\)
+    \item \(G_2 \subset E'(F_{q^2})\) where \(E' : y^2 = x^3 + 4(1+i)\)
+\end{itemize}
+\end{center}
+
+These two groups are used for a pairing \textit{e}. We have a point \(P \in G_1 \subset E(F_q) \) and a point \(Q \in G_2 \subset E'(F_{q^2}\). With \textit{P} and \textit{Q} we calculate a group operation which outputs a point from \(G_T \subset F_{q^{12}}\). The pairing \textit{e} is defined as \(e : G_1 \times G_2 \xrightarrow{} G_T\).
+
+\subsubsection{Embedding Degree}
+The embedding degree of an elliptic curve is defined as the smallest positive integer such that \textit{r} (subgroup size) divides the number \((q^k -1)\). In the BLS12-381 curve k is 12, so \textit{r} is a factor of \((q^{12} - 1)\) but not of any lower power. \\
+The embedding degree has an impact on security and efficiency. The higher the embedding degree the harder the discrete logarithm problem to solve \(G_T\). But the higher the embedding degree the more inefficient the calculations. So you have to find a embedding degree that fits the security without hurting the efficiency. 
+
+\subsubsection{Cofactor}
+The cofactors of the groups \(G_1\) and \(G_2\) are relevant for mapping the hashed message to a point into the respective subgroup \(G_1\) or \(G_2\). The cofactor is also used to find generators of the groups by scaling the smallest valid \textit{x}-coordinate and \textit{y}-coordinate, so the result is not the point at infinity. 
+
+\subsection{BLS12-381 Application}
+
+In this section it'll be explained how the BLS12-381 is used for signing.
+
+\subsubsection{Public And Private Keys}
+For choosing the keys, it is first determined if group \(G_1\) or \(G_2\) is used for the keys. \(G_1\) is normally used for the key generation because \(G_1\) has smaller points and is faster than \(G_2\) which has large points and is slower. Interchanging the groups will affect the execution speed and the storage for the keys.\\
+The secret key is a randomly chosen number between 1 and \textit{r-1} inclusive. The secret key is abbreviated by \textit{sk}. The public key is calculated with the equation \(pk = [sk]g_1\). \textit{pk} stands for public key and \(g_1\) stands for the generator of group \(G_1\).
+
+\subsubsection{Signing}
+As \(G_1\) is used for the keys, \(G_2\) is used for signing a message \textit{m}. Firstly a mapping for \textit{m} to a point in the group \(G_2\) is done. It is done with the algorithm of "hash-and-check". \\
+\begin{center}
+\textbf{hahs-and-check}
+\begin{enumerate}
+    \item Hash message to an integer modulo \textit{q}.
+    \item Enter the integer for coordinate \textit{x} and check if it has a coordinate \textit{y}. If not, add one and repeat this step.
+    \item When \textit{y} coordinate is found, mulitply by the \(G_2\) cofactor to convert it to a point in \(G_2\).
+\end{enumerate}
+\end{center}
+After having found hashed message \textit{H(m)}, the signing is done by calculating \(\sigma = [sk]H(m)\).
+
+\subsubsection{Verification}
+The verification is the part where pairing is used to verify the signature. It verifies if the sk is the corresponding to pk. The signature is valid if \(e(g_1,\sigma)= e(pk,H(m))\). \\
+This can be verified easily with the properties of pairings:
+\begin{center}
+    \(e(pk,H(m)) = e([sk]g_1,H(m))= e(g_1,H(m))^{(sk)} = e(g_1,[sk]H(m)) = e(g_1,\sigma)\)
+\end{center}
+
+
+
 \bibliographystyle{alpha}
-\bibliography{references}
+\bibliography{sample}
+
+\href{https://eprint.iacr.org/2006/372.pdf}{A Taxonomy Of Pairing-Friendly Elliptic Curves}
+\href{https://hackmd.io/@benjaminion/bls12-381}{BLS12-381 For The Rest Of Us}
+\href{https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-pairing-friendly-curves-02#name-bls-curves}{IETF - Draft Pairing-Friendly Curves}
+\href{https://en.wikipedia.org/wiki/Elliptic_curve}{Wikipedia - Elliptic Curve}
+\href{https://electriccoin.co/blog/new-snark-curve/}{BLS12-381: New zk-SNARK Elliptic Curve Construction}
+\href{https://github.com/zcash/librustzcash/blob/6e0364cd42a2b3d2b958a54771ef51a8db79dd29/pairing/src/bls12_381/README.md#generators}{github - BLS12-381 implementation by str4d}
+\href{https://www.desmos.com/calculator?lang=de}{Curve plotter}
+\href{https://static1.squarespace.com/static/5fdbb09f31d71c1227082339/t/5ff394720493bd28278889c6/1609798774687/PairingsForBeginners.pdf}{Pairings for beginners}
+\href{https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-hash-to-curve-16#section-5.3.1}{}
+\href{https://eprint.iacr.org/2019/403.pdf}{SWU mapping BLS12-381}
+
 
 \end{document}

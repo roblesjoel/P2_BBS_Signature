@@ -1,0 +1,26 @@
+\babel@toc {english}{}\relax 
+\contentsline {section}{\numberline {1}Introduction}{1}{section.1}%
+\contentsline {section}{\numberline {2}Building Blocks}{2}{section.2}%
+\contentsline {subsection}{\numberline {2.1}Self-Sovereign Identity}{2}{subsection.2.1}%
+\contentsline {subsection}{\numberline {2.2}Verifiable Credentials}{2}{subsection.2.2}%
+\contentsline {subsection}{\numberline {2.3}Trust Triangle}{2}{subsection.2.3}%
+\contentsline {subsection}{\numberline {2.4}Proof of knowledge \& Zero Knowledge Proof}{2}{subsection.2.4}%
+\contentsline {section}{\numberline {3}Properties of BBS}{2}{section.3}%
+\contentsline {subsection}{\numberline {3.1}Selective Disclosure}{2}{subsection.3.1}%
+\contentsline {subsection}{\numberline {3.2}Unlinkable Proofs}{2}{subsection.3.2}%
+\contentsline {subsection}{\numberline {3.3}Proof of Possession}{2}{subsection.3.3}%
+\contentsline {subsection}{\numberline {3.4}Link Secrets}{3}{subsection.3.4}%
+\contentsline {section}{\numberline {4}BLS12-381 Curve}{3}{section.4}%
+\contentsline {subsection}{\numberline {4.1}Elliptic Curves}{3}{subsection.4.1}%
+\contentsline {subsection}{\numberline {4.2}Pairing-based Cryptography}{3}{subsection.4.2}%
+\contentsline {subsection}{\numberline {4.3}About BLS12-381}{3}{subsection.4.3}%
+\contentsline {subsubsection}{\numberline {4.3.1}History}{3}{subsubsection.4.3.1}%
+\contentsline {subsubsection}{\numberline {4.3.2}Curve Equation And Parameters}{4}{subsubsection.4.3.2}%
+\contentsline {subsubsection}{\numberline {4.3.3}Field Extensions}{4}{subsubsection.4.3.3}%
+\contentsline {subsubsection}{\numberline {4.3.4}Curve}{4}{subsubsection.4.3.4}%
+\contentsline {subsubsection}{\numberline {4.3.5}Embedding Degree}{5}{subsubsection.4.3.5}%
+\contentsline {subsubsection}{\numberline {4.3.6}Cofactor}{5}{subsubsection.4.3.6}%
+\contentsline {subsection}{\numberline {4.4}BLS12-381 Application}{5}{subsection.4.4}%
+\contentsline {subsubsection}{\numberline {4.4.1}Public And Private Keys}{5}{subsubsection.4.4.1}%
+\contentsline {subsubsection}{\numberline {4.4.2}Signing}{5}{subsubsection.4.4.2}%
+\contentsline {subsubsection}{\numberline {4.4.3}Verification}{6}{subsubsection.4.4.3}%
