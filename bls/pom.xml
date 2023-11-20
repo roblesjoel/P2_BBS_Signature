@@ -49,6 +49,14 @@
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>3.0.0-M6</version>
             </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>3.1.1</version>
+                <configuration>
+                    <mainClass>ch.bfh.evg.MainBBS</mainClass>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
 

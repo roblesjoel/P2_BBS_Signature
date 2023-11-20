@@ -1,0 +1,12 @@
+/libmcljava.*
+/.idea/
+/*.iml
+/**/*.iml
+/**/pom.xml.versionsBackup
+/**/target/
+/.classpath
+/**/.classpath
+/.project
+/**/.project
+/.settings/
+/**/.settings/
