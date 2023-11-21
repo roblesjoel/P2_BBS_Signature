@@ -36,11 +36,14 @@ public class MainBBS {
         System.out.println("Public Key:    " + Arrays.toString(publicKey));
 
         Vector<byte[]> messages = Vector.of(("Hello").getBytes(), ("BBS").getBytes());
+        Vector<byte[]> emptyMessages = Vector.of();
         byte[] header = new byte[0];
 
         try{
             byte[] signature = BBS.Sign(secretKey, publicKey, header, messages);
             System.out.println("Signature:   " + Arrays.toString(signature));
+            boolean result = BBS.Verify(publicKey, signature, header, messages);
+            System.out.println("Signature is:   " + result);
         }catch (Exception e){
             System.out.println(e);
             System.exit(-1);

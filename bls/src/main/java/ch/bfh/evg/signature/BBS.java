@@ -10,7 +10,10 @@ import ch.bfh.evg.Exception.InvalidException;
 import ch.bfh.evg.bls12_381.FrElement;
 import ch.bfh.evg.bls12_381.G1Point;
 import ch.bfh.evg.bls12_381.G2Point;
+import ch.bfh.evg.bls12_381.GTElement;
+import ch.bfh.evg.group.GroupElement;
 import ch.bfh.evg.jni.JNI;
+import ch.openchvote.util.sequence.ByteArray;
 import ch.openchvote.util.sequence.Vector;
 import ch.openchvote.util.set.IntSet;
 import ch.openchvote.util.tuples.*;
@@ -21,6 +24,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.stream.IntStream;
 
+import com.herumi.mcl.G2;
 import org.bouncycastle.crypto.digests.SHAKEDigest;
 
 public class BBS extends JNI {
@@ -49,7 +53,6 @@ public class BBS extends JNI {
 
     public static byte[] Sign(BigInteger secretKey, byte[] publicKey, byte[] header, Vector<byte[]> messages) throws InvalidException {
         byte[] api_id = (CIPHERSUITE_ID + "H2G_HM2S_").getBytes();
-
         try{
             BigInteger[] message_scalars = messages_to_scalars(messages, api_id);
             Vector<G1Point> generators = createGenerators(message_scalars.length+1);//create_generators(message_scalars.lenght()+1, publicKey, api_id);
@@ -59,6 +62,60 @@ public class BBS extends JNI {
             System.out.println(e);
             throw new InvalidException("Signature is Invalid");
         }
+    }
+
+    public static boolean Verify(byte[] publicKey, byte[] signature, byte[]header, Vector<byte[]> messages) throws InvalidException{
+        byte[] api_id = (CIPHERSUITE_ID + "H2G_HM2S_").getBytes();
+        try{
+            BigInteger[] message_scalars = messages_to_scalars(messages, api_id);
+            Vector<G1Point> generators = createGenerators(message_scalars.length+1);//create_generators(message_scalars.lenght()+1, publicKey, api_id);
+            boolean result = CoreVerify(publicKey, signature, generators, header, message_scalars, api_id);
+            return result;
+        }catch (Exception e){
+            System.out.println(e);
+            throw new InvalidException("Signature Verification failed");
+        }
+    }
+
+    private static boolean CoreVerify(byte[] publicKey, byte[] signature_octets, Vector<G1Point> generators, byte[] header, BigInteger[] messages, byte[] api_id) throws InvalidException, GroupElement.DeserializationException, AbortException {
+        Signature signature = octets_to_signature(signature_octets);
+        G2Point W = G2Point.deserialize(ByteArray.of(publicKey));
+        int messagesCount = messages.length;
+        if(generators.getLength() != messagesCount + 1) throw new InvalidException("To few generators or to many messages");
+        G1Point Q1 = generators.getValue(1);
+        G1Point[] H_Points = new G1Point[generators.getLength()-1];
+        for (int i = 2; i <= generators.getLength(); i++) {
+            H_Points[i-2] = generators.getValue(i);
+        }
+        BigInteger domain = calculate_domain(publicKey, Q1, H_Points, header, api_id);
+        G1Point B = P1.add(Q1.times(FrElement.of(domain)));
+        for (int i = 1; i <= messagesCount; i++) {
+            BigInteger message = messages[i-1];
+            B.add(generators.getValue(i).times(FrElement.of(message)));
+        }
+        G2Point G2Data = W.add(G2Point.GENERATOR.times(signature.getSecond()));
+        GTElement firstPairing = signature.getFirst().pair(G2Data);
+        GTElement secondPairing = B.pair(G2Point.GENERATOR.negate());
+        GTElement multiplicatedElements = firstPairing.multiply(secondPairing);
+        if(!multiplicatedElements.equals(GTElement.ONE)) throw new InvalidException("Signature is not valid. Verification failed");
+        return true;
+    }
+
+    private static Signature octets_to_signature(byte[] signature_octets) throws InvalidException, GroupElement.DeserializationException {
+        int expected_len = Octet_Point_Length + Octet_Scalar_Length;
+        if(signature_octets.length != expected_len) throw new InvalidException("Signature has incorrect length");
+        byte[] A_octets = new byte[Octet_Point_Length];
+        System.arraycopy(signature_octets, 0, A_octets, 0, Octet_Point_Length);
+        G1Point A = G1Point.deserialize(ByteArray.of(A_octets));
+        if(A == G1Point.ZERO) throw new InvalidException("Error while deserializing. Point in Signature is the identity point");
+        byte[] eBytes = new byte[Octet_Scalar_Length];
+        System.arraycopy(signature_octets, Octet_Point_Length, eBytes, 0, Octet_Scalar_Length);
+        BigInteger e = os2ip(eBytes);
+        if(e == BigInteger.ZERO || e.compareTo(r) == 1) throw new InvalidException("Scalar e is either 0 or to big");
+        Signature signature = new Signature(A, FrElement.of(e), FrElement.of(BigInteger.ZERO));
+        System.out.println("Signature (A):  " + A);
+        System.out.println("Signature (e):  " + e);
+        return signature;
     }
 
     private static byte[] CoreSign(BigInteger secretKey, byte[] publicKey, Vector<G1Point> generators, byte[] header, BigInteger[] messages, G1Point commitment, byte[] api_id) throws AbortException, InvalidException{
@@ -99,6 +156,8 @@ public class BBS extends JNI {
         }
         BigInteger denumerator = secretKey.add(e);
         var A = B.times(FrElement.of(denumerator.modInverse(r)));
+        System.out.println("Signature (A):  " + A);
+        System.out.println("Signature (e):  " + e);
         Signature signature = new Signature(A, FrElement.of(e), FrElement.of(BigInteger.ZERO));
         return signature_to_octets(signature);
     }
@@ -238,7 +297,7 @@ public class BBS extends JNI {
     public static byte[] generatePublicKey(BigInteger secretKey){
         FrElement fr = FrElement.of(secretKey);
         G2Point W = P2.times(fr);
-        return P2.serialize().toByteArray(); // Mayyybe implement the point to octets function
+        return W.serialize().toByteArray(); // Mayyybe implement the point to octets function
     }
 
     /**
