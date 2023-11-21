@@ -1,43 +1,393 @@
+/**
+ * BBS Helper Methods
+ * Base made by Rolf Haenni
+ */
+
 package ch.bfh.evg.signature;
 
+import ch.bfh.evg.Exception.AbortException;
+import ch.bfh.evg.Exception.InvalidException;
 import ch.bfh.evg.bls12_381.FrElement;
 import ch.bfh.evg.bls12_381.G1Point;
 import ch.bfh.evg.bls12_381.G2Point;
 import ch.bfh.evg.jni.JNI;
-import ch.openchvote.util.set.IntSet;
 import ch.openchvote.util.sequence.Vector;
+import ch.openchvote.util.set.IntSet;
 import ch.openchvote.util.tuples.*;
 
+import java.math.BigInteger;
 import java.security.SecureRandom;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.stream.IntStream;
+
+import org.bouncycastle.crypto.digests.SHAKEDigest;
 
 public class BBS extends JNI {
 
-    public static final String CIPHERSUITE_ID = "BBS_BLS12381G1"; // hash-to-curve suite ID missing
-    private static final G1Point P1 = G1Point.GENERATOR;
-    private static final G2Point P2 = G2Point.GENERATOR;
+    /**
+     * Definitions
+     */
+    public static final String CIPHERSUITE_ID = "BBS_BLS12381G1_XOF:SHAKE-256_SSWU_RO_H2G_HM2S_"; // Ciphersuite ID,BLS12-381-SHAKE-256
+    private static final G1Point P1 = G1Point.GENERATOR; // Generator point in G1
+    private static final G2Point P2 = G2Point.GENERATOR; // Generator point in G2
+    private static final SecureRandom SECURE_RANDOM = new SecureRandom(); // Random generator method
+    private static final int Octet_Scalar_Length = 32;
+    private static final int Octet_Point_Length = 48;
+    private static final String Hash_To_Curve_Suite = "BLS12381G1_XOF:SHAKE-256_SSWU_RO_";
+    private static final int Expand_Len = 48;
+    private static final BigInteger r = new BigInteger("073eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001", 16);
 
-    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
-
+    /**
+     * Signature
+     */
     public static class Signature extends Triple<G1Point, FrElement, FrElement> {
         public Signature(G1Point A, FrElement e, FrElement s) {
             super(A, e, s);
         }
     }
 
-    public static class Proof extends Nonuple<G1Point, G1Point, G1Point, FrElement, FrElement, FrElement, FrElement, FrElement, Vector<FrElement>> {
-        public Proof(G1Point A_prime, G1Point A_bar, G1Point D, FrElement c, FrElement e_hat, FrElement r2_hat, FrElement r3_hat, FrElement s_hat, Vector<FrElement> bold_m_j) {
-            super(A_prime, A_bar, D, c, e_hat, r2_hat, r3_hat, s_hat, bold_m_j);
+    public static byte[] Sign(BigInteger secretKey, byte[] publicKey, byte[] header, Vector<byte[]> messages) throws InvalidException {
+        byte[] api_id = (CIPHERSUITE_ID + "H2G_HM2S_").getBytes();
+
+        try{
+            BigInteger[] message_scalars = messages_to_scalars(messages, api_id);
+            Vector<G1Point> generators = createGenerators(message_scalars.length+1);//create_generators(message_scalars.lenght()+1, publicKey, api_id);
+            byte[] signature = CoreSign(secretKey, publicKey, generators, header, message_scalars, G1Point.GENERATOR, api_id);
+            return signature;
+        }catch (Exception e) {
+            System.out.println(e);
+            throw new InvalidException("Signature is Invalid");
         }
     }
 
-    // SIGNATURE SCHEME METHODS
+    private static byte[] CoreSign(BigInteger secretKey, byte[] publicKey, Vector<G1Point> generators, byte[] header, BigInteger[] messages, G1Point commitment, byte[] api_id) throws AbortException, InvalidException{
+        int messageCount = messages.length;
+        if(generators.getLength() < messageCount + 1) throw new AbortException("To many messages or to few generators");
+
+        byte[] signatureDstBase = ("H2S_").getBytes();
+        byte[] signature_dst = new byte[api_id.length + signatureDstBase.length];
+        System.arraycopy(api_id,0, signature_dst, 0, api_id.length);
+        System.arraycopy(signatureDstBase,0, signature_dst, api_id.length, signatureDstBase.length);
+
+        G1Point Q1 = generators.getValue(1);
+        G1Point[] H_Points = new G1Point[generators.getLength()-1];
+        for (int i = 2; i <= generators.getLength(); i++) {
+            H_Points[i-2] = generators.getValue(i);
+        }
+        BigInteger domain = calculate_domain(publicKey, Q1, H_Points, header, api_id);
+        byte[] comm = new byte[0];
+        Object[] commitmentArray = new Object[]{commitment};
+        if(commitment != G1Point.GENERATOR) {
+            byte[] serializedCommitment = serialize(commitmentArray);
+            System.arraycopy(serializedCommitment, 0, comm, 0, serializedCommitment.length);
+        }
+        Object[] dataToBeSerialized = new Object[2+messageCount]; //new Object[3+messageCount];
+        dataToBeSerialized[0] = secretKey;
+        dataToBeSerialized[1] = domain;
+        System.arraycopy(messages,0, dataToBeSerialized, dataToBeSerialized.length-messages.length, messages.length);
+        //dataToBeSerialized[dataToBeSerialized.length-1] = comm;
+        // Commitment is already serialized?
+        byte[] serializedData = serialize(dataToBeSerialized);
+        byte[] serializedBytes = new byte[serializedData.length];
+        System.arraycopy(serializedData, 0, serializedBytes, 0, serializedData.length);
+        BigInteger e = hash_to_scalar(serializedBytes, signature_dst);
+        G1Point B = P1.add(Q1.times(FrElement.of(domain)));
+        for (int i = 1; i <= messageCount; i++) {
+            BigInteger message = messages[i-1];
+            B.add(generators.getValue(i).times(FrElement.of(message)));
+        }
+        BigInteger denumerator = secretKey.add(e);
+        var A = B.times(FrElement.of(denumerator.modInverse(r)));
+        Signature signature = new Signature(A, FrElement.of(e), FrElement.of(BigInteger.ZERO));
+        return signature_to_octets(signature);
+    }
+
+    private static byte[] signature_to_octets(Signature signature) throws InvalidException {
+        Object[] splitSignature = new Object[]{signature.getFirst(), signature.getSecond().toBigInteger()};
+        byte[] serializedSignatureArray = serialize(splitSignature);
+        byte[] serializedSignature = new byte[serializedSignatureArray.length];
+        System.arraycopy(serializedSignatureArray,0,serializedSignature,0,serializedSignatureArray.length);
+        return serializedSignature;
+    }
+
+    private static BigInteger calculate_domain(byte[] publicKey, G1Point Q1, G1Point[] H_Points, byte[] header, byte[] api_id) throws AbortException, InvalidException{
+        int lenghtH_Points = H_Points.length;
+        if(header.length > Math.pow(2,64)-1 || lenghtH_Points > Math.pow(2,64)-1) throw new AbortException("The header or generator points are to long");
+        byte[] domainDSTByte = ("H2S_").getBytes();
+        byte[] domain_dst = new byte[api_id.length + domainDSTByte.length];
+        System.arraycopy(api_id, 0, domain_dst, 0, api_id.length);
+        System.arraycopy(domainDSTByte, 0, domain_dst, api_id.length, domainDSTByte.length);
+        Object[] dom_array = new Object[2+H_Points.length];
+        dom_array[0] = lenghtH_Points;
+        dom_array[1] = Q1;
+        System.arraycopy(H_Points, 0, dom_array, 2, H_Points.length);
+        byte[] serializedDomArray = serialize(dom_array);
+        byte[] dom_octs = new byte[serializedDomArray.length+ api_id.length];
+        System.arraycopy(serializedDomArray, 0, dom_octs, 0, serializedDomArray.length);
+        System.arraycopy(api_id, 0, dom_octs, serializedDomArray.length, api_id.length);
+        BigInteger headerLenght = BigInteger.valueOf(header.length);
+        byte[] serializedHeaderLenght = i2osp(headerLenght, 8);
+        byte[] dom_input = new byte[publicKey.length + dom_octs.length + serializedHeaderLenght.length + header.length];
+        System.arraycopy(publicKey, 0, dom_input, 0, publicKey.length);
+        System.arraycopy(dom_octs, 0, dom_input, publicKey.length, dom_octs.length);
+        System.arraycopy(serializedHeaderLenght, 0, dom_input, dom_octs.length + publicKey.length, serializedHeaderLenght.length);
+        System.arraycopy(header, 0, dom_input, serializedHeaderLenght.length + dom_octs.length + publicKey.length, header.length);
+        return hash_to_scalar(dom_input, domain_dst);
+    }
+
+    private static byte[] serialize(Object[] input_array) throws InvalidException{
+        byte[] octect_result = new byte[0];
+        for (Object el : input_array) {
+            switch (el.getClass().getName()) {
+                case "ch.bfh.evg.bls12_381.G1Point" -> {
+                    G1Point element = (G1Point) el;
+                    byte[] bArray = element.serialize().toByteArray();
+                    byte[] octectCache = octect_result;
+                    octect_result = new byte[octect_result.length + bArray.length];
+                    System.arraycopy(octectCache, 0, octect_result, 0, octectCache.length);
+                    System.arraycopy(element.serialize().toByteArray(), 0, octect_result, octect_result.length - bArray.length, bArray.length);
+                }
+                case "ch.bfh.evg.bls12_381.G2Point" -> {
+                    G2Point element = (G2Point) el;
+                    byte[] bArray = element.serialize().toByteArray();
+                    byte[] octectCache = octect_result;
+                    octect_result = new byte[octect_result.length + bArray.length];
+                    System.arraycopy(octectCache, 0, octect_result, 0, octectCache.length);
+                    System.arraycopy(element.serialize().toByteArray(), 0, octect_result, octect_result.length - bArray.length, bArray.length);
+                }
+                case "java.math.BigInteger" -> {
+                    byte[] element = i2osp((BigInteger) el, Octet_Scalar_Length);
+                    byte[] octectCache = octect_result;
+                    octect_result = new byte[octect_result.length + element.length];
+                    System.arraycopy(octectCache, 0, octect_result, 0, octectCache.length);
+                    System.arraycopy(element, 0, octect_result, octect_result.length - element.length, element.length);
+                }
+                case "java.lang.Integer" -> {
+                    int element = (int) el;
+                    if (element < 0 || element > Math.pow(2,64)-1) throw new InvalidException("Int number is to big");
+                    byte[] serialized = i2osp(BigInteger.valueOf(element), 8);
+                    byte[] octectCache = octect_result;
+                    octect_result = new byte[octect_result.length + serialized.length];
+                    System.arraycopy(octectCache, 0, octect_result, 0, octectCache.length);
+                    System.arraycopy(serialized, 0, octect_result, octect_result.length - serialized.length, serialized.length);
+                }
+                default -> throw new InvalidException("Type cannot be serialized");
+            }
+        }
+
+        return octect_result;
+    }
+
+
+    // Try to implement it myself
+    /*private static void create_generators(int count, byte[] seed, byte[] api_id) throws AbortException{
+        if(count > Math.pow(2, 64) -1) throw new AbortException("Count is to high. To many messages");
+        byte[] seedAsByte = ("SIG_GENERATOR_SEED_").getBytes();
+        byte[] generatorAsByte = ("SIG_GENERATOR_DST_").getBytes();
+        byte[] generatorSeedAsByte = ("MESSAGE_GENERATOR_SEED").getBytes();
+
+        byte[] seed_dst = new byte[api_id.length + seedAsByte.length];
+        byte[] generator_dst = new byte[api_id.length + generatorAsByte.length];
+        byte[] generator_seed = new byte[api_id.length + generatorSeedAsByte.length];
+
+        System.arraycopy(api_id, 0, seed_dst, 0, api_id.length);
+        System.arraycopy(seedAsByte, 0, seed_dst, api_id.length, seedAsByte.length);
+        System.arraycopy(api_id, 0, generator_dst, 0, api_id.length);
+        System.arraycopy(generatorAsByte, 0, generator_dst, api_id.length, generatorAsByte.length);
+        System.arraycopy(api_id, 0, generator_seed, 0, api_id.length);
+        System.arraycopy(generatorSeedAsByte, 0, generator_seed, api_id.length, generatorSeedAsByte.length);
+
+        String v = expand_message_xof(Arrays.toString(generator_seed), Arrays.toString(seed_dst), Expand_Len);
+
+        for (int i = 0; i < count; i++) {
+            v = expand_message_xof(v+ Arrays.toString(i2osp(BigInteger.valueOf(i), 8)), Arrays.toString(seed_dst), Expand_Len);
+            var generator_i = hash_to_curve_g1(v, generator_dst);
+            hash_an
+        }
+
+    }*/
+
+    /**
+     * Map messages to scalars
+     * @param messages The Messages to be mapped
+     * @param api_id The api id
+     * @return Returns the mapped messages as scalar
+     * @throws AbortException Throws exception if there are to many messages
+     */
+    private static BigInteger[] messages_to_scalars(Vector<byte[]> messages, byte[] api_id) throws AbortException{
+        int messagesLength = messages.getLength();
+        if(messagesLength > Math.pow(2,64) -1) throw new AbortException("To many messages!");
+        byte[] separationTag = ("MAP_MSG_TO_SCALAR_AS_HASH_").getBytes();
+        byte[] map_dst = new byte[separationTag.length + api_id.length];
+        System.arraycopy(api_id, 0, map_dst, 0, api_id.length);
+        System.arraycopy(separationTag, 0, map_dst, api_id.length, separationTag.length);
+        BigInteger[] messageScalars = new BigInteger[messagesLength];
+        for (int i = messages.getMinIndex(); i <= messagesLength; i++) {
+            BigInteger messageScalar_i = hash_to_scalar(messages.getValue(i), map_dst);
+            messageScalars[i-1] = messageScalar_i;
+        }
+        return messageScalars;
+    }
+
+    /**
+     * Generate the public key to a given secret Key
+     * @param secretKey The secret key
+     * @return The public key as octets
+     */
+    public static byte[] generatePublicKey(BigInteger secretKey){
+        FrElement fr = FrElement.of(secretKey);
+        G2Point W = P2.times(fr);
+        return P2.serialize().toByteArray(); // Mayyybe implement the point to octets function
+    }
+
+    /**
+     * Generator function for the secret key
+     * @param key_material Random input from which the key will be generated. Must be at least 32 byte
+     * @param key_info May be used to derive distinct keys from the same key material. Defaults to an empty string.
+     * @param key_dst Represents the domain separation. Defaults to the octet string CIPHERSUITE_ID || "KEYGEN_DST_".
+     */
+    public static BigInteger generateSecretKey(byte[] key_material, byte[] key_info, byte[] key_dst) throws InvalidException {
+        if(key_material.length < 32) throw new InvalidException("key_material is to short");
+        if(key_info.length > 65535) throw new InvalidException("key_info is to long");
+        try {
+            if(key_dst.length == 0) key_dst = (CIPHERSUITE_ID + "KEYGEN_DST").getBytes();
+            byte[] serializedInfoLength = i2osp(BigInteger.valueOf(key_info.length), 2);
+            byte[] derive_input = new byte[key_material.length + serializedInfoLength.length + key_info.length];
+            System.arraycopy(key_material, 0, derive_input, 0, key_material.length);
+            System.arraycopy(serializedInfoLength, 0, derive_input, key_material.length, serializedInfoLength.length);
+            System.arraycopy(key_info, 0, derive_input, key_material.length + serializedInfoLength.length, key_info.length);
+            var secretKey = hash_to_scalar(derive_input, key_dst);
+            return secretKey;
+        }catch (Exception e){
+            System.out.println(e);
+            throw new InvalidException("Secret Key is not valid");
+        }
+    }
+
+    /**
+     * Stream to Octet
+     * @param i The BigInt to be converted
+     * @param size The Size of the octet
+     * @return The converted BigInt
+     */
+    private static byte[] i2osp(final BigInteger i, final int size) {
+        if (size < 1) {
+            throw new IllegalArgumentException("Size of the octet string should be at least 1 but is " + size);
+        }
+        if (i == null || i.signum() == -1 || i.bitLength() > size * Byte.SIZE) {
+            throw new IllegalArgumentException("Integer should be a positive number or 0, no larger than the given size");
+        }
+        final byte[] signed = i.toByteArray();
+        if (signed.length == size) {
+            return signed;
+        }
+        final byte[] os = new byte[size];
+        if (signed.length < size) {
+            System.arraycopy(signed, 0, os, size - signed.length, signed.length);
+            return os;
+        }
+        System.arraycopy(signed, 1, os, 0, size);
+        return os;
+    }
+
+    /**
+     * Octet to Stream
+     * @param data the octets to be converted
+     * @return The converted data
+     */
+    private static BigInteger os2ip(final byte[] data) {
+        return new BigInteger(1, data);
+    }
+
+    /**
+     * Hash message to scalar
+     * @param msg_octets The messages to be hashed
+     * @param dst The domain separation tag
+     * @return The hashed message as a scalar
+     * @throws AbortException Throws an exception id the dst is too long
+     */
+    private static BigInteger hash_to_scalar(byte[] msg_octets, byte[] dst) throws AbortException{
+        if(dst.length > 255) throw new AbortException("dst is to long");
+        var uniform_bytes = expand_message_xof(msg_octets, dst, Expand_Len);
+        return os2ip(uniform_bytes.getBytes()).mod(r);
+    }
+
+    /**
+     * Expand message with variable output function
+     * @param msg The message to be digested
+     * @param DST a domain separation tag
+     * @param len_in_bytes The length of the output
+     * @return The hashed message
+     * @throws AbortException Throws an exception if len_in_bytes or DST are too big
+     * as defined in https://datatracker.ietf.org/doc/html/rfc9380#name-expand_message_xof
+     */
+    private static String expand_message_xof(byte[] msg, byte[] DST, int len_in_bytes) throws AbortException {
+        if(len_in_bytes > 65535 || DST.length > 255) throw new AbortException("Either len_in_bytes, or DST is to big");
+        byte[] serializedDstLenght = i2osp(BigInteger.valueOf(DST.length),1);
+        byte[] DST_prime = new byte[DST.length + serializedDstLenght.length];
+        System.arraycopy(DST, 0, DST_prime, 0, DST.length);
+        System.arraycopy(serializedDstLenght, 0, DST_prime, DST.length, serializedDstLenght.length);
+        byte[] serializedLenInBytes = i2osp(BigInteger.valueOf(len_in_bytes), 2);
+        byte[] msg_prime = new byte[msg.length + serializedLenInBytes.length + DST_prime.length];
+        System.arraycopy(msg, 0, msg_prime, 0, msg.length);
+        System.arraycopy(serializedLenInBytes, 0, msg_prime, msg.length, serializedDstLenght.length);
+        System.arraycopy(DST_prime, 0, msg_prime, serializedDstLenght.length+msg.length, DST_prime.length);
+        byte[] uniform_bytes = shakeDigest(msg_prime, len_in_bytes);
+        return Arrays.toString(uniform_bytes);
+    }
+
+    /**
+     * Shake message digest
+     * @param data The Data to be digested
+     * @param returnLength The length of the returned data
+     * @return The hashed data
+     */
+    public static byte[] shakeDigest(byte[] data, int returnLength){
+        SHAKEDigest digest = new SHAKEDigest(256);
+        byte[] hashBytes = new byte[data.length];
+        digest.update(data, 0, data.length);
+        digest.doFinal(hashBytes, 0);
+        digest.reset();
+        return Arrays.copyOf(hashBytes, returnLength);
+    }
+
+    /*// see https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-pairing-friendly-curves-11#name-point-serialization-procedu
+    public static void point_to_octets_g2(){
+        var C_bit = 1; // We want compression, see https://identity.foundation/bbs-signature/draft-irtf-cfrg-bbs-signatures.html#name-hash-to-scalar
+        var I_bit = 0; // 1 if point is at infinity, else 0
+        var S_bit = sign_GF_p^2(y); // 0 if point at infinity or if compression is not used.
+
+        var m_byte = (C_bit * Math.pow(2,7)) + (I_bit * Math.pow(2,6)) + (S_bit * Math.pow(2,5));
+    }*/
+
+
 
     public static KeyPair<FrElement, G2Point> generateKeyPair() {
         var sk = FrElement.getRandom();
         var PK = P2.times(sk);
         return new KeyPair<>(sk, PK);
     }
+
+    /**
+     * Proof
+     */
+    public static class Proof extends Nonuple<G1Point, G1Point, G1Point, FrElement, FrElement, FrElement, FrElement, FrElement, Vector<FrElement>> {
+        public Proof(G1Point A_prime, G1Point A_bar, G1Point D, FrElement c, FrElement e_hat, FrElement r2_hat, FrElement r3_hat, FrElement s_hat, Vector<FrElement> bold_m_j) {
+            super(A_prime, A_bar, D, c, e_hat, r2_hat, r3_hat, s_hat, bold_m_j);
+        }
+    }
+
+
+
+
+
+
+
+
+    // SIGNATURE SCHEME METHODS
+
+
 
     public static Signature generateSignature(FrElement sk, G2Point PK, String header, Vector<String> strMessages) {
         var messages = strMessages.map(FrElement::hashAndMap);
