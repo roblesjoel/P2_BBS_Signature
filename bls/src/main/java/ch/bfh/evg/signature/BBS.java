@@ -440,6 +440,120 @@ public class BBS extends JNI {
         }
     }
 
+    public static boolean ProofVerify(byte[] publicKey, byte[] proof, byte[] header, byte[] ph, Vector<byte[]> disclosed_messages, int[] disclosed_indexes) throws InvalidException, AbortException {
+        try{
+            byte[] api_id = (CIPHERSUITE_ID + "H2G_HM2S_").getBytes();
+            int proof_len_floor = (2 * Octet_Point_Length) + (3 * Octet_Scalar_Length);
+            if(proof.length < proof_len_floor) throw new InvalidException("Proof is to short");
+            int U = (int) Math.floor((proof.length-proof_len_floor)/Octet_Scalar_Length);
+            int disclosedIndexesLenght = disclosed_indexes.length;
+            BigInteger[] messageScalars = messages_to_scalars(disclosed_messages, api_id);
+            Vector<G1Point> generators = createGenerators(U+disclosedIndexesLenght+1);//create_generators(message_scalars.lenght()+1, publicKey, api_id);
+            boolean result = CoreProofVerify(publicKey, proof, generators, header, ph, messageScalars, disclosed_indexes, api_id);
+            return result;
+        }catch (Exception e){
+            System.out.println(e);
+            throw new InvalidException("Proof is not valid");
+        }
+    }
+
+    private static boolean CoreProofVerify(byte[] publicKey, byte[] proof_octets, Vector<G1Point> generators, byte[] header, byte[] ph, BigInteger[] disclosed_messages, int[] disclosed_indexes, byte[] api_id) throws InvalidException, GroupElement.DeserializationException, AbortException {
+        Object[] proof_result = octets_to_proof(proof_octets);
+        G1Point Abar = (G1Point) proof_result[0];
+        G1Point Bbar = (G1Point) proof_result[1];
+        BigInteger r2Calc = (BigInteger) proof_result[2];
+        BigInteger r3Calc = (BigInteger) proof_result[3];
+        BigInteger[] commitments = (BigInteger[]) proof_result[4];
+        BigInteger cp = (BigInteger) proof_result[5];
+        G2Point W = G2Point.deserialize(ByteArray.of(publicKey));
+        Quadruple init_res = ProofVerifyInit(publicKey, proof_result, generators, header, disclosed_messages, disclosed_indexes, api_id);
+        BigInteger challenge = ProofChallengeCalculate(init_res, disclosed_indexes, disclosed_messages, ph, api_id);
+        if(!cp.equals(challenge)) throw new InvalidException("Cp and challange do not match");
+        GTElement Apairing = Abar.pair(W);
+        GTElement Bpairing = Bbar.pair(G2Point.GENERATOR);
+        GTElement multiplicatedElement = Apairing.multiply(Bpairing);
+        if(multiplicatedElement.equals(GTElement.ONE)) throw new InvalidException("Pairing is not correct");
+        return true;
+    }
+
+    private static Quadruple ProofVerifyInit(byte[] publicKey, Object[] proof, Vector<G1Point> generators, byte[] header, BigInteger[] disclosed_messages, int[] disclosed_indexes, byte[] api_id) throws InvalidException, AbortException {
+        G1Point Abar = (G1Point) proof[0];
+        G1Point Bbar = (G1Point) proof[1];
+        BigInteger r2Calc = (BigInteger) proof[2];
+        BigInteger r3Calc = (BigInteger) proof[3];
+        BigInteger[] commitments = (BigInteger[]) proof[4];
+        BigInteger cp = (BigInteger) proof[5];
+        int commitmentLength = commitments.length;
+        int disclosedLength = disclosed_indexes.length;;
+        int L = commitmentLength + disclosedLength;
+        int[] indexes = new int[L];
+        for (int i = 0; i < L; i++) {
+            if(!Arrays.asList(disclosed_indexes).contains(i)) indexes[i] = i;
+        }
+        if(generators.getLength() != L+1) throw new InvalidException("To many or to few generators");
+        G1Point Q1 = generators.getValue(1);
+        G1Point[] MsgGenerators = new G1Point[generators.getLength()-1];
+        G1Point[] disclosedGenerators = new G1Point[disclosedLength];
+        G1Point[] commitmentGenerators = new G1Point[commitmentLength];
+        for (int i = 2; i <= generators.getLength(); i++) {
+            G1Point generator = generators.getValue(i);
+            MsgGenerators[i-2] = generator;
+            if((i-2) < disclosedLength) disclosedGenerators[i-2] = generators.getValue(disclosed_indexes[i-2]+1);
+            if((i-2) < commitmentLength) commitmentGenerators[i-2] = generator;
+        }
+        if(disclosed_messages.length != disclosedLength) throw new AbortException("There are to many or to few disclosed messages");
+        BigInteger domain = calculate_domain(publicKey, Q1, MsgGenerators, header, api_id);
+        G1Point D = P1.add(Q1.times(FrElement.of(domain)));
+        for (int i = 0; i < disclosedLength; i++) {
+            D.add(disclosedGenerators[i].times(FrElement.of(disclosed_messages[i])));
+        }
+        G1Point T = Abar.times(FrElement.of(r2Calc)).add(Bbar.times(FrElement.of(r3Calc)));
+        for (int i = 0; i < commitmentLength; i++) {
+            T.add(commitmentGenerators[i].times(FrElement.of(commitments[i])));
+        }
+        T = T.add(D.times(FrElement.of(cp)));
+        return new Quadruple(Abar, Bbar, T, domain);
+    }
+
+    private static Object[] octets_to_proof(byte[] proof_octets) throws GroupElement.DeserializationException, InvalidException {
+        int proof_len_floor = (2* Octet_Point_Length) + (3*Octet_Scalar_Length);
+        if(proof_octets.length < proof_len_floor) throw new InvalidException("To few proof octets");
+        G1Point[] proofPoints = new G1Point[2];
+        int index = 0;
+        for (int i = 0; i < 2; i++) {
+            int end_index = index + Octet_Point_Length - 1;
+            byte[] octets = Arrays.copyOfRange(proof_octets, index, end_index + 1);
+            G1Point A_i = G1Point.deserialize(ByteArray.of(octets));
+            if(A_i.isZero()) throw new InvalidException("A_i is identity");
+            proofPoints[i] = A_i;
+            index += Octet_Point_Length;
+        }
+        ArrayList<BigInteger> scalars = new ArrayList<>();
+        int j = 0;
+        for (;index < proof_octets.length; index += Octet_Scalar_Length) {
+            int end_index = index + Octet_Scalar_Length - 1;
+            byte[] octets = Arrays.copyOfRange(proof_octets, index, end_index + 1);
+            BigInteger s_j = os2ip(octets);
+            if(s_j.equals(BigInteger.ZERO) || s_j.compareTo(r) >= 0) throw new InvalidException("Scalar is zero or bigger than r");
+            scalars.add(s_j);
+            j += 1;
+        }
+        if(index != proof_octets.length) throw new InvalidException("Index length is not the same as the octet length");
+        BigInteger[] msg_commitments = new BigInteger[j-3];
+        if(j > 3){
+            for (int i = 3; i < j; i++) {
+                msg_commitments[i-3] = scalars.get(i);
+            }
+        }
+        Object[] proof = new Object[6];
+        System.arraycopy(proofPoints, 0, proof, 0, proofPoints.length);
+        proof[2] = scalars.get(0);
+        proof[3] = scalars.get(1);
+        proof[4] = msg_commitments;
+        proof[5] = scalars.get(scalars.size()-1);
+        return proof;
+    }
+
     public static byte[] ProofGen(byte[] publicKey, byte[] signature, byte[] header, byte[] ph, Vector<byte[]> messages, int[] disclosed_indexes) throws InvalidException {
         byte[] api_id = (CIPHERSUITE_ID + "H2G_HM2S_").getBytes();
         try{

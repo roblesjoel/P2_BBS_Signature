@@ -36,6 +36,7 @@ public class MainBBS {
         System.out.println("Public Key:    " + Arrays.toString(publicKey));
 
         Vector<byte[]> messages = Vector.of(("Hello").getBytes(), ("BBS").getBytes());
+        Vector<byte[]> disclosedMessages = Vector.of(("Hello").getBytes());
         Vector<byte[]> emptyMessages = Vector.of();
         byte[] header = new byte[0];
         byte[] ph = new byte[0];
@@ -47,7 +48,9 @@ public class MainBBS {
             boolean result = BBS.Verify(publicKey, signature, header, messages);
             System.out.println("Signature is:   " + result);
             byte[] proof = BBS.ProofGen(publicKey, signature, header, ph, messages, disclosed_indexes);
-            System.out.println("Proof is:   " + Arrays.toString(proof));
+            System.out.println("Proof:   " + Arrays.toString(proof));
+            boolean proofValid = BBS.ProofVerify(publicKey, proof, header, ph, disclosedMessages, disclosed_indexes);
+            System.out.println("Proof is:   " + proofValid);
         }catch (Exception e){
             System.out.println(e);
             System.exit(-1);
