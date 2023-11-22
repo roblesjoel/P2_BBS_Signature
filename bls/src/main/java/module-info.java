@@ -5,4 +5,5 @@ module BLS {
     exports ch.bfh.evg.group;
     exports ch.bfh.evg.signature;
     requires ch.openchvote.utilities;
+    requires org.bouncycastle.provider;
 }
