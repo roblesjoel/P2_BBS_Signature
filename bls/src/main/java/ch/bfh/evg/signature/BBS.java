@@ -24,6 +24,7 @@ import java.security.SecureRandom;
 import java.time.temporal.Temporal;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.stream.IntStream;
 
 import com.herumi.mcl.G1;
@@ -576,12 +577,10 @@ public class BBS extends JNI {
         int[] not_disclosed_indexes = new int[undisclosedCount];
         int counter = 0;
         for (int i = 0; i < messagesCount; i++) {
-            for (int j = 0; j < disclosedCount; j++) {
-                if(i != disclosed_indexes[j]) {
-                    not_disclosed_indexes[counter] = i;
-                    counter++;
-                }
-            }
+            int tempI = i;
+            if(IntStream.of(disclosed_indexes).anyMatch(x -> x == tempI)) continue;
+            not_disclosed_indexes[counter] = i;
+            counter++;
         }
         BigInteger[] disclosed_messages = new BigInteger[disclosedCount];
         BigInteger[] undisclosed_messages = new BigInteger[undisclosedCount];
@@ -676,7 +675,7 @@ public class BBS extends JNI {
         for (int i = 0; i < undisclosed_indexes.length; i++) {
             int undisclosedIndex = undisclosed_indexes[i];
             if(undisclosedIndex < 0 || undisclosedIndex >= messageCount) throw new AbortException("Undisclosed message index out of range");
-            undisclosedGenerators[i] = generators.getValue(undisclosedIndex);
+            undisclosedGenerators[i] = generators.getValue(undisclosedIndex+1);
         }
         BigInteger domain = calculate_domain(publicKey, Q1, MsgGenerators, header, api_id);
         G1Point B = P1.add(Q1.times(FrElement.of(domain)));
