@@ -55,7 +55,7 @@ public class BBS extends JNI {
         }
     }
 
-    public static byte[] Sign(BigInteger secretKey, byte[] publicKey, byte[] header, Vector<byte[]> messages) throws InvalidException {
+    public static byte[] Sign(BigInteger secretKey, byte[] publicKey, byte[] header, byte[][] messages) throws InvalidException {
         byte[] api_id = (CIPHERSUITE_ID + "H2G_HM2S_").getBytes();
         try{
             BigInteger[] message_scalars = messages_to_scalars(messages, api_id);
@@ -68,7 +68,7 @@ public class BBS extends JNI {
         }
     }
 
-    public static boolean Verify(byte[] publicKey, byte[] signature, byte[]header, Vector<byte[]> messages) throws InvalidException{
+    public static boolean Verify(byte[] publicKey, byte[] signature, byte[]header, byte[][] messages) throws InvalidException{
         byte[] api_id = (CIPHERSUITE_ID + "H2G_HM2S_").getBytes();
         try{
             BigInteger[] message_scalars = messages_to_scalars(messages, api_id);
@@ -278,17 +278,17 @@ public class BBS extends JNI {
      * @return Returns the mapped messages as scalar
      * @throws AbortException Throws exception if there are to many messages
      */
-    private static BigInteger[] messages_to_scalars(Vector<byte[]> messages, byte[] api_id) throws AbortException{
-        int messagesLength = messages.getLength();
+    private static BigInteger[] messages_to_scalars(byte[][] messages, byte[] api_id) throws AbortException{
+        int messagesLength = messages.length;
         if(messagesLength > Math.pow(2,64) -1) throw new AbortException("To many messages!");
         byte[] separationTag = ("MAP_MSG_TO_SCALAR_AS_HASH_").getBytes();
         byte[] map_dst = new byte[separationTag.length + api_id.length];
         System.arraycopy(api_id, 0, map_dst, 0, api_id.length);
         System.arraycopy(separationTag, 0, map_dst, api_id.length, separationTag.length);
         BigInteger[] messageScalars = new BigInteger[messagesLength];
-        for (int i = messages.getMinIndex(); i <= messagesLength; i++) {
-            BigInteger messageScalar_i = hash_to_scalar(messages.getValue(i), map_dst);
-            messageScalars[i-1] = messageScalar_i;
+        for (int i = 0; i < messagesLength; i++) {
+            BigInteger messageScalar_i = hash_to_scalar(messages[i], map_dst);
+            messageScalars[i] = messageScalar_i;
         }
         return messageScalars;
     }
@@ -441,7 +441,7 @@ public class BBS extends JNI {
         }
     }
 
-    public static boolean ProofVerify(byte[] publicKey, byte[] proof, byte[] header, byte[] ph, Vector<byte[]> disclosed_messages, int[] disclosed_indexes) throws InvalidException, AbortException {
+    public static boolean ProofVerify(byte[] publicKey, byte[] proof, byte[] header, byte[] ph, byte[][] disclosed_messages, int[] disclosed_indexes) throws InvalidException, AbortException {
         try{
             byte[] api_id = (CIPHERSUITE_ID + "H2G_HM2S_").getBytes();
             int proof_len_floor = (2 * Octet_Point_Length) + (3 * Octet_Scalar_Length);
@@ -555,7 +555,7 @@ public class BBS extends JNI {
         return proof;
     }
 
-    public static byte[] ProofGen(byte[] publicKey, byte[] signature, byte[] header, byte[] ph, Vector<byte[]> messages, int[] disclosed_indexes) throws InvalidException {
+    public static byte[] ProofGen(byte[] publicKey, byte[] signature, byte[] header, byte[] ph, byte[][] messages, int[] disclosed_indexes) throws InvalidException {
         byte[] api_id = (CIPHERSUITE_ID + "H2G_HM2S_").getBytes();
         try{
             Verify(publicKey, signature, header, messages);

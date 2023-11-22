@@ -26,8 +26,7 @@ public class MainBBS {
             System.out.println("Public Key:    " + Arrays.toString(publicKey));
 
             // Generate and validate the Signature
-            Vector<byte[]> messages = Vector.of(("Hello").getBytes(), ("BBS").getBytes(), ("test").getBytes());
-            Vector<byte[]> emptyMessages = Vector.of();
+            byte[][] messages = new byte[][]{("Hello").getBytes(), ("BBS").getBytes(), ("test").getBytes()};
             byte[] header = new byte[0];
             byte[] ph = new byte[0];
             byte[] signature = BBS.Sign(secretKey, publicKey, header, messages);
@@ -36,11 +35,11 @@ public class MainBBS {
             System.out.println("Signature is:   " + result);
 
             // Generate and verify the Proof
-            Vector<byte[]> disclosedMessages = Vector.of(("Hello").getBytes(), ("BBS").getBytes());
-            int[] disclosed_indexes = new int[]{0,1,2};
+            byte[][] disclosedMessages = new byte[][]{("Hello").getBytes(), ("test").getBytes()};
+            int[] disclosed_indexes = new int[]{0,2};
             byte[] proof = BBS.ProofGen(publicKey, signature, header, ph, messages, disclosed_indexes); // Must first verify the signature
             System.out.println("Proof:   " + Arrays.toString(proof));
-            boolean proofValid = BBS.ProofVerify(publicKey, proof, header, ph, messages, disclosed_indexes);
+            boolean proofValid = BBS.ProofVerify(publicKey, proof, header, ph, disclosedMessages, disclosed_indexes);
             System.out.println("Proof is:   " + proofValid);
         }catch (Exception e){
             System.out.println(e);
