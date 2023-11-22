@@ -558,6 +558,7 @@ public class BBS extends JNI {
     public static byte[] ProofGen(byte[] publicKey, byte[] signature, byte[] header, byte[] ph, Vector<byte[]> messages, int[] disclosed_indexes) throws InvalidException {
         byte[] api_id = (CIPHERSUITE_ID + "H2G_HM2S_").getBytes();
         try{
+            Verify(publicKey, signature, header, messages);
             BigInteger[] message_scalars = messages_to_scalars(messages, api_id);
             Vector<G1Point> generators = createGenerators(message_scalars.length+1);//create_generators(message_scalars.lenght()+1, publicKey, api_id);
             byte[] proof = CoreProofGen(publicKey, signature, generators, header, ph, message_scalars, disclosed_indexes, api_id);
