@@ -19,11 +19,14 @@ import ch.openchvote.util.set.IntSet;
 import ch.openchvote.util.tuples.*;
 
 import java.math.BigInteger;
+import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
+import java.time.temporal.Temporal;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.stream.IntStream;
 
+import com.herumi.mcl.G1;
 import com.herumi.mcl.G2;
 import org.bouncycastle.crypto.digests.SHAKEDigest;
 
@@ -435,6 +438,156 @@ public class BBS extends JNI {
         public Proof(G1Point A_prime, G1Point A_bar, G1Point D, FrElement c, FrElement e_hat, FrElement r2_hat, FrElement r3_hat, FrElement s_hat, Vector<FrElement> bold_m_j) {
             super(A_prime, A_bar, D, c, e_hat, r2_hat, r3_hat, s_hat, bold_m_j);
         }
+    }
+
+    public static byte[] ProofGen(byte[] publicKey, byte[] signature, byte[] header, byte[] ph, Vector<byte[]> messages, int[] disclosed_indexes) throws InvalidException {
+        byte[] api_id = (CIPHERSUITE_ID + "H2G_HM2S_").getBytes();
+        try{
+            BigInteger[] message_scalars = messages_to_scalars(messages, api_id);
+            Vector<G1Point> generators = createGenerators(message_scalars.length+1);//create_generators(message_scalars.lenght()+1, publicKey, api_id);
+            byte[] proof = CoreProofGen(publicKey, signature, generators, header, ph, message_scalars, disclosed_indexes, api_id);
+            return proof;
+        }catch (Exception e) {
+            System.out.println(e);
+            throw new InvalidException("Proof is invalid");
+        }
+    }
+
+    private static byte[] CoreProofGen(byte[] publicKey, byte[] signature_octets, Vector<G1Point> generators, byte[] header, byte[] ph, BigInteger[] messages, int[] disclosed_indexes, byte[] api_id) throws InvalidException, GroupElement.DeserializationException, AbortException {
+        Signature signature = octets_to_signature(signature_octets);
+        int messagesCount = messages.length;
+        int disclosedCount = disclosed_indexes.length;
+        if(disclosedCount > messagesCount) throw new InvalidException("More disclosed indexes than messages");
+        int undisclosedCount = messagesCount-disclosedCount;
+        int[] not_disclosed_indexes = new int[undisclosedCount];
+        int counter = 0;
+        for (int i = 0; i < messagesCount; i++) {
+            for (int j = 0; j < disclosedCount; j++) {
+                if(i != disclosed_indexes[j]) {
+                    not_disclosed_indexes[counter] = i;
+                    counter++;
+                }
+            }
+        }
+        BigInteger[] disclosed_messages = new BigInteger[disclosedCount];
+        BigInteger[] undisclosed_messages = new BigInteger[undisclosedCount];
+        for (int i = 0; i < disclosedCount; i++) {
+            disclosed_messages[i] = messages[disclosed_indexes[i]];
+        }
+        for (int i = 0; i < undisclosedCount; i++) {
+            undisclosed_messages[i] = messages[not_disclosed_indexes[i]];
+        }
+        BigInteger[] random_scalars = calculate_random_scalars(3+undisclosedCount);
+        Quadruple init_res = ProofInit(publicKey, signature, generators, random_scalars, header, messages, not_disclosed_indexes, api_id);
+        BigInteger challenge = ProofChallengeCalculate(init_res, disclosed_indexes, disclosed_messages, ph, api_id);
+        var proof = ProofFinalize(init_res, challenge, signature.getSecond().toBigInteger(), random_scalars, undisclosed_messages);
+        return proof;
+    }
+
+    public static byte[] ProofFinalize(Quadruple init_res, BigInteger challenge, BigInteger e_value, BigInteger[] random_scalars, BigInteger[] undisclosed_messages) throws InvalidException {
+        int undisclosedLength = undisclosed_messages.length;
+        if(random_scalars.length != (undisclosedLength+3)) throw new InvalidException("There to many or to few random scalars");
+        BigInteger r1 = random_scalars[0];
+        BigInteger r2 = random_scalars[1];
+        BigInteger r3 = random_scalars[2];
+        BigInteger[] randomScalarsCut = new BigInteger[random_scalars.length-3];
+        System.arraycopy(random_scalars, 3, randomScalarsCut, 0, random_scalars.length-3);
+        G1Point Abar = (G1Point) init_res.getFirst();
+        G1Point Bbar = (G1Point) init_res.getSecond();
+        BigInteger r4 = r1.modInverse(r).negate();
+        BigInteger r2Calc = r2.add(e_value.multiply(r4).multiply(challenge)).mod(r);
+        BigInteger r3Calc = r3.add(r4.multiply(challenge)).mod(r);
+        BigInteger[] calcMessages = new BigInteger[undisclosedLength];
+        for (int i = 0; i < undisclosedLength; i++) {
+            BigInteger calcMessage = randomScalarsCut[i].add(undisclosed_messages[i].multiply(challenge)).mod(r);
+            calcMessages[i] = calcMessage;
+        }
+        Object[] proof = new Object[5 + calcMessages.length];
+        proof[0] = Abar;
+        proof[1] = Bbar;
+        proof[2] = r2Calc;
+        proof[3] = r3Calc;
+        System.arraycopy(calcMessages, 0, proof, 4, calcMessages.length);
+        proof[proof.length-1] = challenge;
+        return proof_to_octets(proof);
+    }
+
+    private static byte[] proof_to_octets(Object[] proof) throws InvalidException {
+        return serialize(proof);
+    }
+
+    public static BigInteger ProofChallengeCalculate(Quadruple init_res, int[] i_array, BigInteger[] msg_array, byte[] ph, byte[] api_id) throws AbortException, InvalidException {
+        byte[] dst = ("H2S_").getBytes();
+        byte[] challenge_dst = new byte[api_id.length+ dst.length];
+        System.arraycopy(api_id, 0, challenge_dst, 0, api_id.length);
+        System.arraycopy(dst, 0, challenge_dst, api_id.length, dst.length);
+        int disclosedMessagesIndex = i_array.length;
+        if(disclosedMessagesIndex > Math.pow(2,64)-1 || disclosedMessagesIndex != msg_array.length) throw new AbortException("To many or to few message indexes");
+        if (ph.length > Math.pow(2,64)-1) throw new AbortException("Ph is to long");
+        Object[] c_arr = new Object[4 + i_array.length + msg_array.length]; // Abar, Bbar, T, lenght + irray lenght, + msg lenght + domain
+        c_arr[0] = init_res.getFirst();
+        c_arr[1] = init_res.getSecond();
+        c_arr[2] = init_res.getThird();
+        for (int i = 0; i < i_array.length ; i++) {
+            c_arr[i+3] = i_array[i];
+        }
+        System.arraycopy(msg_array, 0, c_arr, 3+i_array.length, msg_array.length);
+        c_arr[c_arr.length-1] = init_res.getFourth();
+        byte[] serializedData = serialize(c_arr);
+        byte[] serilizedPhLenght = i2osp(BigInteger.valueOf(ph.length), 8);
+        byte[] c_octs = new byte[serializedData.length + serilizedPhLenght.length + ph.length];
+        System.arraycopy(serializedData, 0, c_octs, 0, serializedData.length);
+        System.arraycopy(serilizedPhLenght, 0, c_octs, serializedData.length, serilizedPhLenght.length);
+        System.arraycopy(ph, 0, c_octs, serializedData.length + serilizedPhLenght.length, ph.length);
+        return hash_to_scalar(c_octs, challenge_dst);
+    }
+
+    public static Quadruple ProofInit(byte[] publicKey, Signature signature, Vector<G1Point> generators, BigInteger[] random_scalars, byte[] header, BigInteger[] messages, int[] undisclosed_indexes, byte[] api_id) throws InvalidException, AbortException {
+        int messageCount = messages.length;
+        int undisclosedCount = undisclosed_indexes.length;
+        if(undisclosedCount > messageCount) throw new AbortException("The number of the undisclosed messages is higher than the number of the disclosed messages");
+        if(random_scalars.length != (undisclosedCount+3)) throw new InvalidException("The number of Random Scalars needs to be the same as the number of undisclosed indexes + 3");
+        BigInteger r1 = random_scalars[0];
+        BigInteger r2 = random_scalars[1];
+        BigInteger r3 = random_scalars[2];
+        BigInteger[] randomScalarsCut = new BigInteger[random_scalars.length-3];
+        System.arraycopy(random_scalars, 3, randomScalarsCut, 0, random_scalars.length-3);
+        if (generators.getLength() != (messageCount+1)) throw new InvalidException("The number of generators is not the same as the number of messages + 1");
+        G1Point Q1 = generators.getValue(1);
+        G1Point[] MsgGenerators = new G1Point[generators.getLength()-1];
+        for (int i = 2; i <= generators.getLength(); i++) {
+            MsgGenerators[i-2] = generators.getValue(i);
+        }
+        G1Point[] undisclosedGenerators = new G1Point[undisclosedCount];
+        for (int i = 0; i < undisclosed_indexes.length; i++) {
+            int undisclosedIndex = undisclosed_indexes[i];
+            if(undisclosedIndex < 0 || undisclosedIndex >= messageCount) throw new AbortException("Undisclosed message index out of range");
+            undisclosedGenerators[i] = generators.getValue(undisclosedIndex);
+        }
+        BigInteger domain = calculate_domain(publicKey, Q1, MsgGenerators, header, api_id);
+        G1Point B = P1.add(Q1.times(FrElement.of(domain)));
+        for (int i = 1; i <= messageCount; i++) {
+            BigInteger message = messages[i-1];
+            B.add(generators.getValue(i).times(FrElement.of(message)));
+        }
+        G1Point Abar = signature.getFirst().times(FrElement.of(r1));
+        G1Point Abare = Abar.times(signature.getSecond());
+        G1Point Bbar = B.times(FrElement.of(r1)).subtract(Abare);
+        G1Point BbarR3 = Bbar.times(FrElement.of(r3));
+        G1Point T = Abar.times(FrElement.of(r2)).add(BbarR3);
+        for (int i = 0; i < undisclosedGenerators.length; i++) {
+            G1Point temp = undisclosedGenerators[i].times(FrElement.of(randomScalarsCut[i]));
+            T.add(temp);
+        }
+        return new Quadruple(Abar, Bbar, T, domain);
+    }
+
+    public static BigInteger[] calculate_random_scalars(int count){
+        BigInteger[] randomScalars = new BigInteger[count];
+        for (int i = 0; i < count; i++) {
+            randomScalars[i] = os2ip(randomBytes(Expand_Len)).mod(r);
+        }
+        return randomScalars;
     }
 
 

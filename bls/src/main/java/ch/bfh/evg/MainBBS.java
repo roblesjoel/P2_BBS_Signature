@@ -38,12 +38,16 @@ public class MainBBS {
         Vector<byte[]> messages = Vector.of(("Hello").getBytes(), ("BBS").getBytes());
         Vector<byte[]> emptyMessages = Vector.of();
         byte[] header = new byte[0];
+        byte[] ph = new byte[0];
+        int[] disclosed_indexes = new int[]{0};
 
         try{
             byte[] signature = BBS.Sign(secretKey, publicKey, header, messages);
             System.out.println("Signature:   " + Arrays.toString(signature));
             boolean result = BBS.Verify(publicKey, signature, header, messages);
             System.out.println("Signature is:   " + result);
+            byte[] proof = BBS.ProofGen(publicKey, signature, header, ph, messages, disclosed_indexes);
+            System.out.println("Proof is:   " + Arrays.toString(proof));
         }catch (Exception e){
             System.out.println(e);
             System.exit(-1);
