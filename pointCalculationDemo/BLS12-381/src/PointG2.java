@@ -1,40 +1,81 @@
 import java.math.BigInteger;
 import java.util.Objects;
 
+
 public class PointG2 {
 
     private static final BigInteger P = new BigInteger("01a0111ea397fe69a4b1ba7b6434bacd764774b84f38512bf6730d2a0f6b0f6241eabfffeb153ffffb9feffffffffaaab", 16);
     private final Polynomial x;
     private final Polynomial y;
 
-    PointG2(Polynomial x, Polynomial y){
+    //constructor
+    public PointG2(Polynomial x, Polynomial y){
         this.x = x;
         this.y = y;
     }
 
-    boolean isInfinity(){
-
-        return true;
+    //check if point is infinity
+    public boolean isInfinity(){
+        if(this.x.getCoefficient0() == null && this.x.getCoefficient1() == null){
+            return this.y.getCoefficient0() == null && this.y.getCoefficient1() == null;
+        }else{
+            return false;
+        }
     }
 
 
-    private static PointG2 add(PointG2 p1){
+    //addition of two points in G2
+    public PointG2 add(PointG2 other){
+        if(this.isInfinity()) return other;
+        if(other.isInfinity()) return this;
 
+        if(this.x.equals(other.x)){
+            if(this.y.equals(other.y.negate())){
+                return new PointG2(null, null);
+            }else{
+                return doublePoint();
+            }
+        }
 
+        Polynomial slope = other.y.subtract(this.y).divide(other.x.subtract(this.x).inverse()).mod(P);
+        Polynomial x3 = slope.pow(2).subtract(this.x).subtract(other.x).mod(P);
+        Polynomial y3 = slope.multiply(this.x.subtract(x3)).subtract(this.y).mod(P);
 
-    return null;
+        return new PointG2(x3, y3);
     }
 
-    private static PointG2 doublePoint(){
+    public PointG2 doublePoint(){
 
-        return null;
+        Polynomial slope = this.y.pow(2).multiplyScalar(BigInteger.valueOf(3)).multiply(this.y.multiplyScalar(BigInteger.valueOf(2))).inverse().mod(P);
+        Polynomial x3 = slope.pow(2).subtract(this.x.multiplyScalar(BigInteger.valueOf(2))).mod(P);
+        Polynomial y3 = slope.multiply(this.x.subtract(x3)).subtract(this.y).mod(P);
+
+        return new PointG2(x3, y3);
     }
 
-    private static PointG2 scalarMultiply(BigInteger k){
+    public PointG2 scalarMultiply(BigInteger k){
+        PointG2 result = new PointG2(null, null);
+        PointG2 addend = this;
 
-        return null;
+        while (k.compareTo(BigInteger.ZERO) > 0) {
+            if (k.mod(BigInteger.TWO).equals(BigInteger.ONE)) { // Check if k is odd
+                result = result.add(addend);
+            }
+            addend = addend.doublePoint();
+            k = k.divide(BigInteger.TWO);
+        }
+
+        return result;
     }
 
+
+    @Override
+    public String toString() {
+        return "PointG2{" +
+                "x=" + x +
+                ", y=" + y +
+                '}';
+    }
 
     @Override
     public boolean equals(Object o) {
