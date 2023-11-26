@@ -12,7 +12,12 @@ public class Polynomial {
     }
 
 
+    private Polynomial negate(){
+        BigInteger coefficient0 = this.coefficient0.negate();
+        BigInteger coefficient1 = this.coefficient1.negate();
 
+        return new Polynomial(coefficient0, coefficient1);
+    }
 
     private Polynomial add(Polynomial other){
         BigInteger coefficient0 = this.coefficient0.add(other.coefficient0);
@@ -35,6 +40,11 @@ public class Polynomial {
         BigInteger coefficient1 = this.coefficient1.negate().multiply(BigInteger.ONE.divide(this.coefficient0.pow(2).subtract(this.coefficient1.pow(2).multiply(BigInteger.ONE.negate()))));
 
         return new Polynomial(coefficient0, coefficient1);
+    }
+
+    private Polynomial divide(Polynomial other){
+
+        return null;
     }
 
     @Override

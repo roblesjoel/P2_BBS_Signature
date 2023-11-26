@@ -3,7 +3,7 @@ import java.util.Objects;
 
 public class PointG1 {
 
-    public static final BigInteger P = new BigInteger("11", 10);
+    private static final BigInteger P = new BigInteger("01a0111ea397fe69a4b1ba7b6434bacd764774b84f38512bf6730d2a0f6b0f6241eabfffeb153ffffb9feffffffffaaab", 16);
     private final BigInteger x;
     private final BigInteger y;
 
@@ -56,20 +56,26 @@ public class PointG1 {
         return new PointG1(x3, y3);
     }
 
-    //multiplying a point with a scalar: square and multiply Method
-    public PointG1 scalarMultiply( BigInteger k){
-        if(k.equals(BigInteger.ZERO)){
-            return new PointG1(null, null);
+    //square and muliply algorithm for multiplication of a point with a scalar
+    public PointG1 scalarMultiply(BigInteger k){
+        PointG1 result = new PointG1(null, null);
+        PointG1 addend = this;
+
+        while (k.compareTo(BigInteger.ZERO) > 0) {
+            if (k.mod(BigInteger.TWO).equals(BigInteger.ONE)) { // Check if k is odd
+                result = result.add(addend);
+            }
+            addend = addend.doublePoint();
+            k = k.divide(BigInteger.TWO);
         }
-        if(k.mod(BigInteger.TWO).equals(BigInteger.ZERO)){
-            return scalarMultiply(k.divide(BigInteger.TWO));
-        }
-        return this.add(scalarMultiply(k.subtract(BigInteger.ONE)));
+
+        return result;
     }
 
 
-    public String toString(PointG1 p){
-        return "x: " + p.x + " y: " + p.y;
+    //toString method for nice output
+    public String toString(){
+        return "x: " + this.x + " y: " + this.y;
     }
 
     @Override

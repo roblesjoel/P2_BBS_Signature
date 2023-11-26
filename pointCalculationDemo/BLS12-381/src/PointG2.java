@@ -3,7 +3,7 @@ import java.util.Objects;
 
 public class PointG2 {
 
-    public static final BigInteger P = new BigInteger("11", 10);
+    private static final BigInteger P = new BigInteger("01a0111ea397fe69a4b1ba7b6434bacd764774b84f38512bf6730d2a0f6b0f6241eabfffeb153ffffb9feffffffffaaab", 16);
     private final Polynomial x;
     private final Polynomial y;
 
@@ -14,20 +14,25 @@ public class PointG2 {
 
     boolean isInfinity(){
 
+        return true;
     }
 
 
     private static PointG2 add(PointG2 p1){
 
 
+
+    return null;
     }
 
     private static PointG2 doublePoint(){
 
+        return null;
     }
 
     private static PointG2 scalarMultiply(BigInteger k){
 
+        return null;
     }
 
 
