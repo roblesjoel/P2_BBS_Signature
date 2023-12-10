@@ -10,7 +10,7 @@ import java.math.BigInteger;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-public class GTElement extends JNI implements MultiplicativeElement<GTElement, FrElement> {
+public class GTElement extends JNI implements MultiplicativeElement<GTElement, Scalar> {
 
     public static final GTElement GENERATOR = G1Point.GENERATOR.pair(G2Point.GENERATOR);
     public static final GTElement ONE = GENERATOR.divide(GENERATOR);
@@ -24,7 +24,7 @@ public class GTElement extends JNI implements MultiplicativeElement<GTElement, F
     }
 
     public static GTElement getRandom() {
-        return GENERATOR.power(FrElement.getRandom());
+        return GENERATOR.power(Scalar.getRandom());
     }
 
     public static GTElement deserialize(ByteArray byteArray) throws DeserializationException {
@@ -45,7 +45,7 @@ public class GTElement extends JNI implements MultiplicativeElement<GTElement, F
     }
 
     @Override
-    public GTElement power(FrElement exponent) {
+    public GTElement power(Scalar exponent) {
         GT result = new GT();
         Mcl.pow(result, this.gt, exponent.fr);
         return new GTElement(result);

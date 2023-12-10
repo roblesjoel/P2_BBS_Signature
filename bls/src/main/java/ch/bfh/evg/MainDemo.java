@@ -1,7 +1,6 @@
 package ch.bfh.evg;
 
 import ch.bfh.evg.signature.BBS;
-import ch.openchvote.util.sequence.Vector;
 
 import java.math.BigInteger;
 import java.util.Arrays;
@@ -27,9 +26,9 @@ public class MainDemo {
                 byte[] key_material = new byte[256];
                 byte[] key_info = new byte[0];
                 byte[] key_dst = new byte[0];
-                BigInteger secretKey = BBS.generateSecretKey(key_material,key_info,key_dst);
+                BigInteger secretKey = BBS.KeyGen(key_material,key_info,key_dst);
                 System.out.println("Secret Key:    " + secretKey);
-                byte[] publicKey = BBS.generatePublicKey(secretKey);
+                byte[] publicKey = BBS.SkToPk(secretKey);
                 System.out.println("Public Key:    " + Arrays.toString(publicKey));
 
                 // Generate and validate the Signature

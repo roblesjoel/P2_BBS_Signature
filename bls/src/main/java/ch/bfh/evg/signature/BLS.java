@@ -1,6 +1,6 @@
 package ch.bfh.evg.signature;
 
-import ch.bfh.evg.bls12_381.FrElement;
+import ch.bfh.evg.bls12_381.Scalar;
 import ch.bfh.evg.bls12_381.G1Point;
 import ch.bfh.evg.bls12_381.G2Point;
 import ch.bfh.evg.jni.JNI;
@@ -21,17 +21,17 @@ import java.util.List;
  */
 public class BLS extends JNI {
 
-    public static KeyPair<FrElement, G2Point> generateKeyPair() {
-        var sk = FrElement.getRandom();
+    public static KeyPair<Scalar, G2Point> generateKeyPair() {
+        var sk = Scalar.getRandom();
         var pk = G2Point.GENERATOR.times(sk);
         return new KeyPair<>(sk, pk);
     }
 
-    public static G1Point generateSignature(FrElement sk, String message) {
+    public static G1Point generateSignature(Scalar sk, String message) {
         return generateSignature(sk, message.getBytes());
     }
 
-    public static G1Point generateSignature(FrElement sk, byte[] message) {
+    public static G1Point generateSignature(Scalar sk, byte[] message) {
         var hash = G1Point.hashAndMap(message);
         return hash.times(sk);
     }
@@ -61,15 +61,4 @@ public class BLS extends JNI {
     public static G2Point combinePublicKey(G2Point... publicKeys) {
         return Arrays.stream(publicKeys).reduce(G2Point.ZERO, G2Point::add);
     }
-
-    public static G1Point generateProofOfPossession(KeyPair<FrElement, G2Point> keyPair) {
-        var sk = keyPair.getSecretKey();
-        var pk = keyPair.getPublicKey();
-        return generateSignature(sk, pk.serialize().toByteArray());
-    }
-
-    public static boolean verifyProofOfPossession(G2Point pk, G1Point proof) {
-        return verifySignature(pk, pk.serialize().toByteArray(), proof);
-    }
-
 }

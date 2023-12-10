@@ -7,7 +7,7 @@ package ch.bfh.evg.signature;
 
 import ch.bfh.evg.Exception.AbortException;
 import ch.bfh.evg.Exception.InvalidException;
-import ch.bfh.evg.bls12_381.FrElement;
+import ch.bfh.evg.bls12_381.Scalar;
 import ch.bfh.evg.bls12_381.G1Point;
 import ch.bfh.evg.bls12_381.G2Point;
 import ch.bfh.evg.bls12_381.GTElement;
@@ -21,46 +21,48 @@ import ch.openchvote.util.tuples.*;
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
-import java.time.temporal.Temporal;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 import java.util.stream.IntStream;
 
-import com.herumi.mcl.G1;
-import com.herumi.mcl.G2;
 import org.bouncycastle.crypto.digests.SHAKEDigest;
 
 public class BBS extends JNI {
 
+    //TODO
+    //create generator function
+
     /**
      * Definitions
      */
-    public static final String CIPHERSUITE_ID = "BBS_BLS12381G1_XOF:SHAKE-256_SSWU_RO_H2G_HM2S_"; // Ciphersuite ID,BLS12-381-SHAKE-256
+    public static final OctetString CIPHERSUITE_ID = OctetString.valueOf("BBS_BLS12381G1_XOF:SHAKE-256_SSWU_RO_H2G_HM2S_"); // Ciphersuite ID,BLS12-381-SHAKE-256
     private static final G1Point P1 = G1Point.GENERATOR; // Generator point in G1
     private static final G2Point P2 = G2Point.GENERATOR; // Generator point in G2
     private static final SecureRandom SECURE_RANDOM = new SecureRandom(); // Random generator method
-    private static final int Octet_Scalar_Length = 32;
-    private static final int Octet_Point_Length = 48;
-    private static final String Hash_To_Curve_Suite = "BLS12381G1_XOF:SHAKE-256_SSWU_RO_";
+    private static final OctetString Octet_Scalar_Length = OctetString.valueOf(32);
+    private static final OctetString Octet_Point_Length = OctetString.valueOf(48);
     private static final int Expand_Len = 48;
-    private static final BigInteger r = new BigInteger("073eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001", 16);
+    private static final Scalar r = Scalar.of(new BigInteger("073eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001", 16));
 
     /**
      * Signature
      */
-    public static class Signature extends Triple<G1Point, FrElement, FrElement> {
-        public Signature(G1Point A, FrElement e, FrElement s) {
-            super(A, e, s);
-        }
-    }
 
-    public static byte[] Sign(BigInteger secretKey, byte[] publicKey, byte[] header, byte[][] messages) throws InvalidException {
-        byte[] api_id = (CIPHERSUITE_ID + "H2G_HM2S_").getBytes();
+    /**
+     * Message sign function
+     * @param secretKey The secret key as a scalar
+     * @param publicKey The public key as an OctetString
+     * @param header Context and application information as an OctetString
+     * @param messages The messages to be signed as an OctetString Vector
+     * @return Returns a valid Signature
+     * @throws InvalidException Throws an Invalid Exception if an error occurred while generation the signature
+     */
+    public static OctetString Sign(Scalar secretKey, OctetString publicKey, OctetString header, Vector<OctetString> messages) throws InvalidException {
+        OctetString api_id = CIPHERSUITE_ID.concat("H2G_HM2S_", StandardCharsets.US_ASCII);
         try{
-            BigInteger[] message_scalars = messages_to_scalars(messages, api_id);
-            Vector<G1Point> generators = createGenerators(message_scalars.length+1);//create_generators(message_scalars.lenght()+1, publicKey, api_id);
-            byte[] signature = CoreSign(secretKey, publicKey, generators, header, message_scalars, G1Point.GENERATOR, api_id);
+            Vector<Scalar> message_scalars = messages_to_scalars(messages, api_id);
+            Vector<G1Point> generators = createGenerators(message_scalars.getLength()+1);//create_generators(message_scalars.lenght()+1, publicKey, api_id);
+            Signature signature = CoreSign(secretKey, publicKey, generators, header, message_scalars, G1Point.GENERATOR, api_id);
             return signature;
         }catch (Exception e) {
             System.out.println(e);
@@ -68,11 +70,20 @@ public class BBS extends JNI {
         }
     }
 
-    public static boolean Verify(byte[] publicKey, byte[] signature, byte[]header, byte[][] messages) throws InvalidException{
-        byte[] api_id = (CIPHERSUITE_ID + "H2G_HM2S_").getBytes();
+    /**
+     * Message verify function
+     * @param publicKey The public key as an OctetString
+     * @param signature The signature of the messages
+     * @param header Context and application information as an OctetString
+     * @param messages The messages to be signed as an OctetString Vector
+     * @return Returns true if the signature is valid, if not throws an error
+     * @throws InvalidException Throws an Invalid Exception if an error occurred while verifying the signature
+     */
+    public static boolean Verify(OctetString publicKey, OctetString signature, OctetString header, Vector<OctetString> messages) throws InvalidException{
+        OctetString api_id = CIPHERSUITE_ID.concat("H2G_HM2S_", StandardCharsets.US_ASCII);
         try{
-            BigInteger[] message_scalars = messages_to_scalars(messages, api_id);
-            Vector<G1Point> generators = createGenerators(message_scalars.length+1);//create_generators(message_scalars.lenght()+1, publicKey, api_id);
+            Vector<Scalar> message_scalars = messages_to_scalars(messages, api_id);
+            Vector<G1Point> generators = createGenerators(message_scalars.getLength()+1);//create_generators(message_scalars.lenght()+1, publicKey, api_id);
             boolean result = CoreVerify(publicKey, signature, generators, header, message_scalars, api_id);
             return result;
         }catch (Exception e){
@@ -81,167 +92,186 @@ public class BBS extends JNI {
         }
     }
 
-    private static boolean CoreVerify(byte[] publicKey, byte[] signature_octets, Vector<G1Point> generators, byte[] header, BigInteger[] messages, byte[] api_id) throws InvalidException, GroupElement.DeserializationException, AbortException {
+    /**
+     * The core verify function
+     * @param publicKey The public key as an Octet string
+     * @param signature_octets The signature as an octet string
+     * @param generators The generators
+     * @param header Context and application information as an OctetString
+     * @param messages The messages as a Scalar Vector
+     * @param api_id The apiId as an Octet string
+     * @return Returns true if the signature is valid
+     * @throws InvalidException Throws an Invalid exception if the Signature is invalid
+     * @throws GroupElement.DeserializationException Throws an GroupElement.DeserializationException if the Group element cannot be deserialized
+     * @throws AbortException Throws an AbortException if there was error while verifing
+     */
+    private static boolean CoreVerify(OctetString publicKey, OctetString signature_octets, Vector<G1Point> generators, OctetString header, Vector<Scalar> messages, OctetString api_id) throws InvalidException, GroupElement.DeserializationException, AbortException {
         Signature signature = octets_to_signature(signature_octets);
-        G2Point W = G2Point.deserialize(ByteArray.of(publicKey));
-        int messagesCount = messages.length;
-        if(generators.getLength() != messagesCount + 1) throw new InvalidException("To few generators or to many messages");
-        G1Point Q1 = generators.getValue(1);
-        G1Point[] H_Points = new G1Point[generators.getLength()-1];
-        for (int i = 2; i <= generators.getLength(); i++) {
-            H_Points[i-2] = generators.getValue(i);
-        }
-        BigInteger domain = calculate_domain(publicKey, Q1, H_Points, header, api_id);
-        G1Point B = P1.add(Q1.times(FrElement.of(domain)));
-        for (int i = 1; i <= messagesCount; i++) {
-            BigInteger message = messages[i-1];
-            B.add(generators.getValue(i).times(FrElement.of(message)));
-        }
-        G2Point G2Data = W.add(G2Point.GENERATOR.times(signature.getSecond()));
-        GTElement firstPairing = signature.getFirst().pair(G2Data);
-        GTElement secondPairing = B.pair(G2Point.GENERATOR.negate());
-        GTElement multiplicatedElements = firstPairing.multiply(secondPairing);
-        if(!multiplicatedElements.equals(GTElement.ONE)) throw new InvalidException("Signature is not valid. Verification failed");
+        G2Point W = G2Point.deserialize(publicKey.toBytes());
+        int L = messages.getLength();
+        if(generators.getLength() != (L + 1)) throw new InvalidException("To few generators or to many messages");
+        G1Point Q_1 = generators.getValue(1);
+        Vector<G1Point> H_x = getHPoints(generators);
+        Scalar domain = calculate_domain(publicKey, Q_1, H_x, header, api_id);
+        G1Point B = P1.add(Q_1.times(domain)).add(G1Point.sumOfScalarMultiply(H_x, messages));
+        if(!signature.getPoint().pair(W.add(G2Point.GENERATOR.times(signature.getScalar()))).multiply(B.pair(G2Point.GENERATOR.negate())).equals(GTElement.ONE)) throw new InvalidException("Signature is not valid. Verification failed");
         return true;
     }
 
-    private static Signature octets_to_signature(byte[] signature_octets) throws InvalidException, GroupElement.DeserializationException {
-        int expected_len = Octet_Point_Length + Octet_Scalar_Length;
-        if(signature_octets.length != expected_len) throw new InvalidException("Signature has incorrect length");
-        byte[] A_octets = new byte[Octet_Point_Length];
-        System.arraycopy(signature_octets, 0, A_octets, 0, Octet_Point_Length);
-        G1Point A = G1Point.deserialize(ByteArray.of(A_octets));
-        if(A == G1Point.ZERO) throw new InvalidException("Error while deserializing. Point in Signature is the identity point");
-        byte[] eBytes = new byte[Octet_Scalar_Length];
-        System.arraycopy(signature_octets, Octet_Point_Length, eBytes, 0, Octet_Scalar_Length);
-        BigInteger e = os2ip(eBytes);
-        if(e == BigInteger.ZERO || e.compareTo(r) == 1) throw new InvalidException("Scalar e is either 0 or to big");
-        Signature signature = new Signature(A, FrElement.of(e), FrElement.of(BigInteger.ZERO));
-        System.out.println("Signature (A):  " + A);
-        System.out.println("Signature (e):  " + e);
-        return signature;
+    /**
+     * Gets the needed HPoints from the Vector of generators
+     * @param generators The Vector of generators
+     * @return Returns a new Vector of generators
+     */
+    private static Vector<G1Point> getHPoints(Vector<G1Point> generators){
+        Vector.Builder<G1Point> builder = new Vector.Builder<>(generators.getLength()-1);
+        for (int i = 2; i <= generators.getLength(); i++) {
+            builder.setValue(i, generators.getValue(i));
+        }
+        return builder.build();
     }
 
-    private static byte[] CoreSign(BigInteger secretKey, byte[] publicKey, Vector<G1Point> generators, byte[] header, BigInteger[] messages, G1Point commitment, byte[] api_id) throws AbortException, InvalidException{
-        int messageCount = messages.length;
-        if(generators.getLength() < messageCount + 1) throw new AbortException("To many messages or to few generators");
+    /**
+     * Parse the Signature octets to the signature type
+     * @param signature_octets The signature octets
+     * @return The Signature Object
+     * @throws InvalidException Throws an InvalidException if the signature octets are not correct
+     * @throws GroupElement.DeserializationException Throws a GroupElement.DeserializationException if the Group Element could not be deserialized
+     */
+    private static Signature octets_to_signature(OctetString signature_octets) throws InvalidException, GroupElement.DeserializationException {
+        int expected_len = Octet_Point_Length.toInt() + Octet_Scalar_Length.toInt();
+        if(signature_octets.length != expected_len) throw new InvalidException("Signature has incorrect length");
+        OctetString A_octets = signature_octets.split(0, Octet_Point_Length.length -1);
+        G1Point A = G1Point.deserialize(ByteArray.of(A_octets.toBytes()));
+        if(A == G1Point.ZERO) throw new InvalidException("Error while deserializing. Point in Signature is the identity point");
+        int index = Octet_Point_Length.length;
+        int end_index = index + Octet_Scalar_Length.length - 1;
+        Scalar e = os2ip(signature_octets.split(index, end_index));
+        if(e.isZero() || e.biggerThan(r)) throw new InvalidException("Scalar e is either 0 or to big");
+        return new Signature(A, e);
+    }
 
-        byte[] signatureDstBase = ("H2S_").getBytes();
-        byte[] signature_dst = new byte[api_id.length + signatureDstBase.length];
-        System.arraycopy(api_id,0, signature_dst, 0, api_id.length);
-        System.arraycopy(signatureDstBase,0, signature_dst, api_id.length, signatureDstBase.length);
-
+    /**
+     * The Core Signature function
+     * @param secretKey The secret key as a Scalar
+     * @param publicKey The public key as a Octet String
+     * @param generators A Vector with G1Points
+     * @param header Context and application information as an OctetString
+     * @param messages The messages as a Scalar Vector
+     * @param commitment A point on G1
+     * @param api_id The apiId as an Octet string
+     * @return Returns the Signature as an Octet String
+     * @throws AbortException Throws an Abort Exception if there is an error why signing
+     * @throws InvalidException Throws an Invalid Exception if an input is not valid
+     */
+    private static OctetString CoreSign(Scalar secretKey, OctetString publicKey, Vector<G1Point> generators, OctetString header, Vector<Scalar> messages, G1Point commitment, OctetString api_id) throws AbortException, InvalidException{
+        OctetString signature_dst = api_id.concat("H2S_", StandardCharsets.US_ASCII);
+        int L = messages.getLength();
+        if(generators.getLength() < L + 1) throw new AbortException("To many messages or to few generators");
         G1Point Q1 = generators.getValue(1);
-        G1Point[] H_Points = new G1Point[generators.getLength()-1];
-        for (int i = 2; i <= generators.getLength(); i++) {
-            H_Points[i-2] = generators.getValue(i);
-        }
-        BigInteger domain = calculate_domain(publicKey, Q1, H_Points, header, api_id);
-        byte[] comm = new byte[0];
-        Object[] commitmentArray = new Object[]{commitment};
-        if(commitment != G1Point.GENERATOR) {
-            byte[] serializedCommitment = serialize(commitmentArray);
-            System.arraycopy(serializedCommitment, 0, comm, 0, serializedCommitment.length);
-        }
-        Object[] dataToBeSerialized = new Object[2+messageCount]; //new Object[3+messageCount];
+        Vector<G1Point> H_x = getHPoints(generators);
+        Scalar domain = calculate_domain(publicKey, Q1, H_x, header, api_id);
+        OctetString comm = OctetString.valueOf("");
+        if(commitment != G1Point.ZERO) comm = serialize(new Object[]{commitment});
+        Scalar e = hash_to_scalar(serialize(prepareSignSerializationData(secretKey, domain, messages, comm)), signature_dst);
+        G1Point B = P1.add(Q1.times(domain).add(G1Point.sumOfScalarMultiply(H_x, messages)));
+        var A = B.times(Scalar.of(secretKey.add(e).toBigInteger().modInverse(r.toBigInteger())));
+        return signature_to_octets(new Signature(A, e));
+    }
+
+    /**
+     * Prepare all the data that will be hashed to a scalar
+     * @param secretKey The secret key as a scalar
+     * @param domain The domain as a scalar
+     * @param messages The messages as a Scalar Vector
+     * @param comm The serialized commitment
+     * @return An Object array with all the data to be serialized
+     */
+    private static Object[] prepareSignSerializationData(Scalar secretKey, Scalar domain, Vector<Scalar> messages, OctetString comm){
+        Object[] dataToBeSerialized = new Object[2+messages.getLength()];
         dataToBeSerialized[0] = secretKey;
         dataToBeSerialized[1] = domain;
-        System.arraycopy(messages,0, dataToBeSerialized, dataToBeSerialized.length-messages.length, messages.length);
-        //dataToBeSerialized[dataToBeSerialized.length-1] = comm;
-        // Commitment is already serialized?
-        byte[] serializedData = serialize(dataToBeSerialized);
-        byte[] serializedBytes = new byte[serializedData.length];
-        System.arraycopy(serializedData, 0, serializedBytes, 0, serializedData.length);
-        BigInteger e = hash_to_scalar(serializedBytes, signature_dst);
-        G1Point B = P1.add(Q1.times(FrElement.of(domain)));
-        for (int i = 1; i <= messageCount; i++) {
-            BigInteger message = messages[i-1];
-            B.add(generators.getValue(i).times(FrElement.of(message)));
-        }
-        BigInteger denumerator = secretKey.add(e);
-        var A = B.times(FrElement.of(denumerator.modInverse(r)));
-        System.out.println("Signature (A):  " + A);
-        System.out.println("Signature (e):  " + e);
-        Signature signature = new Signature(A, FrElement.of(e), FrElement.of(BigInteger.ZERO));
-        return signature_to_octets(signature);
+        System.arraycopy(messages.toArray(),0, dataToBeSerialized, 2, messages.getLength());
+        return dataToBeSerialized;
     }
 
-    private static byte[] signature_to_octets(Signature signature) throws InvalidException {
-        Object[] splitSignature = new Object[]{signature.getFirst(), signature.getSecond().toBigInteger()};
-        byte[] serializedSignatureArray = serialize(splitSignature);
-        byte[] serializedSignature = new byte[serializedSignatureArray.length];
-        System.arraycopy(serializedSignatureArray,0,serializedSignature,0,serializedSignatureArray.length);
-        return serializedSignature;
+    /**
+     * Serialize the signature
+     * @param signature The signature object
+     * @return The serialized signature as an octet String
+     * @throws InvalidException Throws an Invalid Exception if the input is invalid
+     */
+    private static OctetString signature_to_octets(Signature signature) throws InvalidException {
+        return serialize(new Object[]{signature.getPoint(), signature.getScalar()});
     }
 
-    private static BigInteger calculate_domain(byte[] publicKey, G1Point Q1, G1Point[] H_Points, byte[] header, byte[] api_id) throws AbortException, InvalidException{
-        int lenghtH_Points = H_Points.length;
-        if(header.length > Math.pow(2,64)-1 || lenghtH_Points > Math.pow(2,64)-1) throw new AbortException("The header or generator points are to long");
-        byte[] domainDSTByte = ("H2S_").getBytes();
-        byte[] domain_dst = new byte[api_id.length + domainDSTByte.length];
-        System.arraycopy(api_id, 0, domain_dst, 0, api_id.length);
-        System.arraycopy(domainDSTByte, 0, domain_dst, api_id.length, domainDSTByte.length);
-        Object[] dom_array = new Object[2+H_Points.length];
-        dom_array[0] = lenghtH_Points;
-        dom_array[1] = Q1;
-        System.arraycopy(H_Points, 0, dom_array, 2, H_Points.length);
-        byte[] serializedDomArray = serialize(dom_array);
-        byte[] dom_octs = new byte[serializedDomArray.length+ api_id.length];
-        System.arraycopy(serializedDomArray, 0, dom_octs, 0, serializedDomArray.length);
-        System.arraycopy(api_id, 0, dom_octs, serializedDomArray.length, api_id.length);
-        BigInteger headerLenght = BigInteger.valueOf(header.length);
-        byte[] serializedHeaderLenght = i2osp(headerLenght, 8);
-        byte[] dom_input = new byte[publicKey.length + dom_octs.length + serializedHeaderLenght.length + header.length];
-        System.arraycopy(publicKey, 0, dom_input, 0, publicKey.length);
-        System.arraycopy(dom_octs, 0, dom_input, publicKey.length, dom_octs.length);
-        System.arraycopy(serializedHeaderLenght, 0, dom_input, dom_octs.length + publicKey.length, serializedHeaderLenght.length);
-        System.arraycopy(header, 0, dom_input, serializedHeaderLenght.length + dom_octs.length + publicKey.length, header.length);
+    /**
+     * Calculate the domian Scalar
+     * @param publicKey The public key as an Octet string
+     * @param Q1 A generator point on G1
+     * @param H_Points Multiple Generator Points on G1
+     * @param header Context and application information as an OctetString
+     * @param api_id The apiId as an Octet string
+     * @return Returns the domain as a scalar
+     * @throws AbortException Throws a AbortException if there is an error while calculation the domain
+     * @throws InvalidException Throws a InvalidException if an input is invalid
+     */
+    private static Scalar calculate_domain(OctetString publicKey, G1Point Q1, Vector<G1Point> H_Points, OctetString header, OctetString api_id) throws AbortException, InvalidException{
+        OctetString domain_dst = api_id.concat("H2S_", StandardCharsets.US_ASCII);
+        int L = H_Points.getLength();
+        if(header.length > Math.pow(2,64)-1 || L > Math.pow(2,64)-1) throw new AbortException("The header is to long or there are to many generator points");
+        Object[] dom_array = serializationPreparationForDomain(L, Q1, H_Points);
+        OctetString dom_octs = serialize(dom_array);
+        OctetString dom_input = publicKey.concat(dom_octs).concat(i2osp(Scalar.of(BigInteger.valueOf(header.length)), 8)).concat(header);
         return hash_to_scalar(dom_input, domain_dst);
     }
 
-    private static byte[] serialize(Object[] input_array) throws InvalidException{
-        byte[] octect_result = new byte[0];
+    /**
+     * Makes an Object array for serialization
+     * @param L The length of the H_points
+     * @param Q_1 A generator point on G1
+     * @param H_Points Multiple Generator Points on G1
+     * @return Returns an Object array with the data
+     */
+    private static Object[] serializationPreparationForDomain(int L, G1Point Q_1, Vector<G1Point> H_Points){
+        Object[] dataToBeSerialized = new Object[2+H_Points.getLength()];
+        dataToBeSerialized[0] = L;
+        dataToBeSerialized[1] = Q_1;
+        System.arraycopy(H_Points.toArray(),0, dataToBeSerialized, 2, H_Points.getLength());
+        return dataToBeSerialized;
+    }
+
+    /**
+     * Serialize an Object array
+     * @param input_array The objects to be serialized
+     * @return The serialized objects as an Octet string
+     * @throws InvalidException Throws an InvalidException of a given int so to big or a wrong type is given
+     */
+    private static OctetString serialize(Object[] input_array) throws InvalidException{
+        OctetString octect_result = new OctetString();
         for (Object el : input_array) {
             switch (el.getClass().getName()) {
                 case "ch.bfh.evg.bls12_381.G1Point" -> {
                     G1Point element = (G1Point) el;
-                    byte[] bArray = element.serialize().toByteArray();
-                    byte[] octectCache = octect_result;
-                    octect_result = new byte[octect_result.length + bArray.length];
-                    System.arraycopy(octectCache, 0, octect_result, 0, octectCache.length);
-                    System.arraycopy(element.serialize().toByteArray(), 0, octect_result, octect_result.length - bArray.length, bArray.length);
+                    octect_result.concat(new OctetString(element.serialize().toByteArray()));
                 }
                 case "ch.bfh.evg.bls12_381.G2Point" -> {
                     G2Point element = (G2Point) el;
-                    byte[] bArray = element.serialize().toByteArray();
-                    byte[] octectCache = octect_result;
-                    octect_result = new byte[octect_result.length + bArray.length];
-                    System.arraycopy(octectCache, 0, octect_result, 0, octectCache.length);
-                    System.arraycopy(element.serialize().toByteArray(), 0, octect_result, octect_result.length - bArray.length, bArray.length);
+                    octect_result.concat(new OctetString(element.serialize().toByteArray()));
                 }
-                case "java.math.BigInteger" -> {
-                    byte[] element = i2osp((BigInteger) el, Octet_Scalar_Length);
-                    byte[] octectCache = octect_result;
-                    octect_result = new byte[octect_result.length + element.length];
-                    System.arraycopy(octectCache, 0, octect_result, 0, octectCache.length);
-                    System.arraycopy(element, 0, octect_result, octect_result.length - element.length, element.length);
+                case "ch.bfh.evg.bls12_381.Scalar" -> {
+                    octect_result.concat(i2osp((BigInteger) el, Octet_Scalar_Length.toInt()))
                 }
                 case "java.lang.Integer" -> {
                     int element = (int) el;
                     if (element < 0 || element > Math.pow(2,64)-1) throw new InvalidException("Int number is to big");
-                    byte[] serialized = i2osp(BigInteger.valueOf(element), 8);
-                    byte[] octectCache = octect_result;
-                    octect_result = new byte[octect_result.length + serialized.length];
-                    System.arraycopy(octectCache, 0, octect_result, 0, octectCache.length);
-                    System.arraycopy(serialized, 0, octect_result, octect_result.length - serialized.length, serialized.length);
+                    octect_result.concat(i2osp(BigInteger.valueOf(element), 8));
                 }
                 default -> throw new InvalidException("Type cannot be serialized");
             }
         }
-
         return octect_result;
     }
-
 
     // Try to implement it myself
     /*private static void create_generators(int count, byte[] seed, byte[] api_id) throws AbortException{
@@ -278,19 +308,15 @@ public class BBS extends JNI {
      * @return Returns the mapped messages as scalar
      * @throws AbortException Throws exception if there are to many messages
      */
-    private static BigInteger[] messages_to_scalars(byte[][] messages, byte[] api_id) throws AbortException{
-        int messagesLength = messages.length;
-        if(messagesLength > Math.pow(2,64) -1) throw new AbortException("To many messages!");
-        byte[] separationTag = ("MAP_MSG_TO_SCALAR_AS_HASH_").getBytes();
-        byte[] map_dst = new byte[separationTag.length + api_id.length];
-        System.arraycopy(api_id, 0, map_dst, 0, api_id.length);
-        System.arraycopy(separationTag, 0, map_dst, api_id.length, separationTag.length);
-        BigInteger[] messageScalars = new BigInteger[messagesLength];
-        for (int i = 0; i < messagesLength; i++) {
-            BigInteger messageScalar_i = hash_to_scalar(messages[i], map_dst);
-            messageScalars[i] = messageScalar_i;
+    private static Vector<Scalar> messages_to_scalars(Vector<OctetString> messages, OctetString api_id) throws AbortException{
+        OctetString map_dst = api_id.concat(OctetString.valueOf("MAP_MSG_TO_SCALAR_AS_HASH_", StandardCharsets.US_ASCII));
+        if(messages.getLength() > Math.pow(2,64) -1) throw new AbortException("To many messages!");
+        var builder = new Vector.Builder<Scalar>();
+        for (int i = 1; i <= messages.getLength(); i++) {
+            Scalar msg_scalar_i = hash_to_scalar(messages.getValue(i), map_dst);
+            builder.addValue(msg_scalar_i);
         }
-        return messageScalars;
+        return builder.build();
     }
 
     /**
@@ -298,10 +324,9 @@ public class BBS extends JNI {
      * @param secretKey The secret key
      * @return The public key as octets
      */
-    public static byte[] generatePublicKey(BigInteger secretKey){
-        FrElement fr = FrElement.of(secretKey);
-        G2Point W = P2.times(fr);
-        return W.serialize().toByteArray(); // Mayyybe implement the point to octets function
+    public static OctetString SkToPk(Scalar secretKey){
+        G2Point W = P2.times(secretKey);
+        return new OctetString(W.serialize().toByteArray());
     }
 
     /**
@@ -310,18 +335,14 @@ public class BBS extends JNI {
      * @param key_info May be used to derive distinct keys from the same key material. Defaults to an empty string.
      * @param key_dst Represents the domain separation. Defaults to the octet string CIPHERSUITE_ID || "KEYGEN_DST_".
      */
-    public static BigInteger generateSecretKey(byte[] key_material, byte[] key_info, byte[] key_dst) throws InvalidException {
-        if(key_material.length < 32) throw new InvalidException("key_material is to short");
-        if(key_info.length > 65535) throw new InvalidException("key_info is to long");
+    public static Scalar KeyGen(OctetString key_material, OctetString key_info, OctetString key_dst) throws InvalidException {
         try {
-            if(key_dst.length == 0) key_dst = (CIPHERSUITE_ID + "KEYGEN_DST").getBytes();
-            byte[] serializedInfoLength = i2osp(BigInteger.valueOf(key_info.length), 2);
-            byte[] derive_input = new byte[key_material.length + serializedInfoLength.length + key_info.length];
-            System.arraycopy(key_material, 0, derive_input, 0, key_material.length);
-            System.arraycopy(serializedInfoLength, 0, derive_input, key_material.length, serializedInfoLength.length);
-            System.arraycopy(key_info, 0, derive_input, key_material.length + serializedInfoLength.length, key_info.length);
-            var secretKey = hash_to_scalar(derive_input, key_dst);
-            return secretKey;
+            if(key_dst.length == 0) key_dst = CIPHERSUITE_ID.concat("KEYGEN_DST");
+            if(key_material.length < 32) throw new InvalidException("key_material is to short");
+            if(key_info.length > 65535) throw new InvalidException("key_info is to long");
+            OctetString derive_input = key_material.concat(i2osp(key_info.length), 2).concat(key_info);
+            Scalar SK = hash_to_scalar(derive_input, key_dst);
+            return SK;
         }catch (Exception e){
             System.out.println(e);
             throw new InvalidException("Secret Key is not valid");
@@ -334,24 +355,24 @@ public class BBS extends JNI {
      * @param size The Size of the octet
      * @return The converted BigInt
      */
-    private static byte[] i2osp(final BigInteger i, final int size) {
+    private static OctetString i2osp(Scalar i, int size) {
         if (size < 1) {
             throw new IllegalArgumentException("Size of the octet string should be at least 1 but is " + size);
         }
-        if (i == null || i.signum() == -1 || i.bitLength() > size * Byte.SIZE) {
+        if (i == null || i.toBigInteger().signum() == -1 || i.toBigInteger().bitLength() > size * Byte.SIZE) {
             throw new IllegalArgumentException("Integer should be a positive number or 0, no larger than the given size");
         }
-        final byte[] signed = i.toByteArray();
+        byte[] signed = i.toBigInteger().toByteArray();
         if (signed.length == size) {
-            return signed;
+            return new OctetString(signed);
         }
-        final byte[] os = new byte[size];
+        byte[] os = new byte[size];
         if (signed.length < size) {
             System.arraycopy(signed, 0, os, size - signed.length, signed.length);
-            return os;
+            return new OctetString(os);
         }
         System.arraycopy(signed, 1, os, 0, size);
-        return os;
+        return new OctetString(os);
     }
 
     /**
@@ -359,8 +380,8 @@ public class BBS extends JNI {
      * @param data the octets to be converted
      * @return The converted data
      */
-    private static BigInteger os2ip(final byte[] data) {
-        return new BigInteger(1, data);
+    private static Scalar os2ip(OctetString data) {
+        return Scalar.of(new BigInteger(1, data.toBytes()));
     }
 
     /**
@@ -370,34 +391,28 @@ public class BBS extends JNI {
      * @return The hashed message as a scalar
      * @throws AbortException Throws an exception id the dst is too long
      */
-    private static BigInteger hash_to_scalar(byte[] msg_octets, byte[] dst) throws AbortException{
+    private static Scalar hash_to_scalar(OctetString msg_octets, OctetString dst) throws AbortException{
         if(dst.length > 255) throw new AbortException("dst is to long");
         var uniform_bytes = expand_message_xof(msg_octets, dst, Expand_Len);
-        return os2ip(uniform_bytes.getBytes()).mod(r);
+        return Scalar.of(os2ip(uniform_bytes).toBigInteger().mod(r.toBigInteger()));
     }
 
     /**
      * Expand message with variable output function
      * @param msg The message to be digested
-     * @param DST a domain separation tag
+     * @param dst a domain separation tag
      * @param len_in_bytes The length of the output
      * @return The hashed message
      * @throws AbortException Throws an exception if len_in_bytes or DST are too big
      * as defined in https://datatracker.ietf.org/doc/html/rfc9380#name-expand_message_xof
      */
-    private static String expand_message_xof(byte[] msg, byte[] DST, int len_in_bytes) throws AbortException {
-        if(len_in_bytes > 65535 || DST.length > 255) throw new AbortException("Either len_in_bytes, or DST is to big");
-        byte[] serializedDstLenght = i2osp(BigInteger.valueOf(DST.length),1);
-        byte[] DST_prime = new byte[DST.length + serializedDstLenght.length];
-        System.arraycopy(DST, 0, DST_prime, 0, DST.length);
-        System.arraycopy(serializedDstLenght, 0, DST_prime, DST.length, serializedDstLenght.length);
-        byte[] serializedLenInBytes = i2osp(BigInteger.valueOf(len_in_bytes), 2);
-        byte[] msg_prime = new byte[msg.length + serializedLenInBytes.length + DST_prime.length];
-        System.arraycopy(msg, 0, msg_prime, 0, msg.length);
-        System.arraycopy(serializedLenInBytes, 0, msg_prime, msg.length, serializedDstLenght.length);
-        System.arraycopy(DST_prime, 0, msg_prime, serializedDstLenght.length+msg.length, DST_prime.length);
-        byte[] uniform_bytes = shakeDigest(msg_prime, len_in_bytes);
-        return Arrays.toString(uniform_bytes);
+    private static OctetString expand_message_xof(OctetString msg, OctetString dst, int len_in_bytes) throws AbortException {
+        if(len_in_bytes > 65535 || dst.length > 255) throw new AbortException("Either len_in_bytes or DST is to big");
+        OctetString serializedDstLenght = i2osp(Scalar.of(BigInteger.valueOf(dst.length)),1);
+        OctetString dstPrime = dst.concat(serializedDstLenght);
+        OctetString serializedLenInBytes = i2osp(Scalar.of(BigInteger.valueOf(len_in_bytes)), 2);
+        OctetString msg_prime = msg.concat(serializedLenInBytes).concat(dstPrime);
+        return shakeDigest(msg_prime, len_in_bytes);
     }
 
     /**
@@ -406,40 +421,22 @@ public class BBS extends JNI {
      * @param returnLength The length of the returned data
      * @return The hashed data
      */
-    public static byte[] shakeDigest(byte[] data, int returnLength){
+    public static OctetString shakeDigest(OctetString data, int returnLength){
         SHAKEDigest digest = new SHAKEDigest(256);
         byte[] hashBytes = new byte[data.length];
-        digest.update(data, 0, data.length);
+        digest.update(data.toBytes(), 0, data.length);
         digest.doFinal(hashBytes, 0);
         digest.reset();
-        return Arrays.copyOf(hashBytes, returnLength);
+        return new OctetString(Arrays.copyOf(hashBytes, returnLength));
     }
 
-    /*// see https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-pairing-friendly-curves-11#name-point-serialization-procedu
-    public static void point_to_octets_g2(){
-        var C_bit = 1; // We want compression, see https://identity.foundation/bbs-signature/draft-irtf-cfrg-bbs-signatures.html#name-hash-to-scalar
-        var I_bit = 0; // 1 if point is at infinity, else 0
-        var S_bit = sign_GF_p^2(y); // 0 if point at infinity or if compression is not used.
 
-        var m_byte = (C_bit * Math.pow(2,7)) + (I_bit * Math.pow(2,6)) + (S_bit * Math.pow(2,5));
-    }*/
+    // To be redefined
 
-
-
-    public static KeyPair<FrElement, G2Point> generateKeyPair() {
-        var sk = FrElement.getRandom();
-        var PK = P2.times(sk);
-        return new KeyPair<>(sk, PK);
-    }
 
     /**
      * Proof
      */
-    public static class Proof extends Nonuple<G1Point, G1Point, G1Point, FrElement, FrElement, FrElement, FrElement, FrElement, Vector<FrElement>> {
-        public Proof(G1Point A_prime, G1Point A_bar, G1Point D, FrElement c, FrElement e_hat, FrElement r2_hat, FrElement r3_hat, FrElement s_hat, Vector<FrElement> bold_m_j) {
-            super(A_prime, A_bar, D, c, e_hat, r2_hat, r3_hat, s_hat, bold_m_j);
-        }
-    }
 
     public static boolean ProofVerify(byte[] publicKey, byte[] proof, byte[] header, byte[] ph, byte[][] disclosed_messages, int[] disclosed_indexes) throws InvalidException, AbortException {
         try{
@@ -469,11 +466,11 @@ public class BBS extends JNI {
         G2Point W = G2Point.deserialize(ByteArray.of(publicKey));
         Quadruple init_res = ProofVerifyInit(publicKey, proof_result, generators, header, disclosed_messages, disclosed_indexes, api_id);
         BigInteger challenge = ProofChallengeCalculate(init_res, disclosed_indexes, disclosed_messages, ph, api_id);
-        if(!cp.equals(challenge)) throw new InvalidException("Cp and challange do not match");
+        if(!cp.equals(challenge)) throw new InvalidException("Cp and challenge do not match");
         GTElement Apairing = Abar.pair(W);
-        GTElement Bpairing = Bbar.pair(G2Point.GENERATOR);
+        GTElement Bpairing = Bbar.pair(G2Point.GENERATOR.negate());
         GTElement multiplicatedElement = Apairing.multiply(Bpairing);
-        if(multiplicatedElement.equals(GTElement.ONE)) throw new InvalidException("Pairing is not correct");
+        if(!multiplicatedElement.equals(GTElement.ONE)) throw new InvalidException("Pairing is not correct");
         return true;
     }
 
@@ -504,15 +501,15 @@ public class BBS extends JNI {
         }
         if(disclosed_messages.length != disclosedLength) throw new AbortException("There are to many or to few disclosed messages");
         BigInteger domain = calculate_domain(publicKey, Q1, MsgGenerators, header, api_id);
-        G1Point D = P1.add(Q1.times(FrElement.of(domain)));
+        G1Point D = P1.add(Q1.times(Scalar.of(domain)));
         for (int i = 0; i < disclosedLength; i++) {
-            D.add(disclosedGenerators[i].times(FrElement.of(disclosed_messages[i])));
+            D.add(disclosedGenerators[i].times(Scalar.of(disclosed_messages[i])));
         }
-        G1Point T = Abar.times(FrElement.of(r2Calc)).add(Bbar.times(FrElement.of(r3Calc)));
+        G1Point T = Abar.times(Scalar.of(r2Calc)).add(Bbar.times(Scalar.of(r3Calc)));
         for (int i = 0; i < commitmentLength; i++) {
-            T.add(commitmentGenerators[i].times(FrElement.of(commitments[i])));
+            T.add(commitmentGenerators[i].times(Scalar.of(commitments[i])));
         }
-        T = T.add(D.times(FrElement.of(cp)));
+        T = T.add(D.times(Scalar.of(cp)));
         return new Quadruple(Abar, Bbar, T, domain);
     }
 
@@ -558,7 +555,6 @@ public class BBS extends JNI {
     public static byte[] ProofGen(byte[] publicKey, byte[] signature, byte[] header, byte[] ph, byte[][] messages, int[] disclosed_indexes) throws InvalidException {
         byte[] api_id = (CIPHERSUITE_ID + "H2G_HM2S_").getBytes();
         try{
-            Verify(publicKey, signature, header, messages);
             BigInteger[] message_scalars = messages_to_scalars(messages, api_id);
             Vector<G1Point> generators = createGenerators(message_scalars.length+1);//create_generators(message_scalars.lenght()+1, publicKey, api_id);
             byte[] proof = CoreProofGen(publicKey, signature, generators, header, ph, message_scalars, disclosed_indexes, api_id);
@@ -679,18 +675,18 @@ public class BBS extends JNI {
             undisclosedGenerators[i] = generators.getValue(undisclosedIndex+1);
         }
         BigInteger domain = calculate_domain(publicKey, Q1, MsgGenerators, header, api_id);
-        G1Point B = P1.add(Q1.times(FrElement.of(domain)));
+        G1Point B = P1.add(Q1.times(Scalar.of(domain)));
         for (int i = 1; i <= messageCount; i++) {
             BigInteger message = messages[i-1];
-            B.add(generators.getValue(i).times(FrElement.of(message)));
+            B.add(generators.getValue(i).times(Scalar.of(message)));
         }
-        G1Point Abar = signature.getFirst().times(FrElement.of(r1));
+        G1Point Abar = signature.getFirst().times(Scalar.of(r1));
         G1Point Abare = Abar.times(signature.getSecond());
-        G1Point Bbar = B.times(FrElement.of(r1)).subtract(Abare);
-        G1Point BbarR3 = Bbar.times(FrElement.of(r3));
-        G1Point T = Abar.times(FrElement.of(r2)).add(BbarR3);
+        G1Point Bbar = B.times(Scalar.of(r1)).subtract(Abare);
+        G1Point BbarR3 = Bbar.times(Scalar.of(r3));
+        G1Point T = Abar.times(Scalar.of(r2)).add(BbarR3);
         for (int i = 0; i < undisclosedGenerators.length; i++) {
-            G1Point temp = undisclosedGenerators[i].times(FrElement.of(randomScalarsCut[i]));
+            G1Point temp = undisclosedGenerators[i].times(Scalar.of(randomScalarsCut[i]));
             T.add(temp);
         }
         return new Quadruple(Abar, Bbar, T, domain);
@@ -715,8 +711,8 @@ public class BBS extends JNI {
 
 
 
-    public static Signature generateSignature(FrElement sk, G2Point PK, String header, Vector<String> strMessages) {
-        var messages = strMessages.map(FrElement::hashAndMap);
+    public static Signature generateSignature(Scalar sk, G2Point PK, String header, Vector<String> strMessages) {
+        var messages = strMessages.map(Scalar::hashAndMap);
         // Definitions
         int L = messages.getLength();
         // Precomputations
@@ -726,8 +722,8 @@ public class BBS extends JNI {
         var MsgGenerators = Generators.select(IntSet.range(3, L + 2));
         // Procedure
         var domArray = new Septuple<>(PK, L, Q1, Q2, MsgGenerators, CIPHERSUITE_ID, header);
-        var domain = FrElement.hashAndMap(domArray);
-        var e_s = FrElement.hashAndMap(new Triple<>(sk, domain, messages), 2);
+        var domain = Scalar.hashAndMap(domArray);
+        var e_s = Scalar.hashAndMap(new Triple<>(sk, domain, messages), 2);
         var e = e_s.getValue(1);
         var s = e_s.getValue(2);
         var B = P1.add(Q1.times(s)).add(Q2.times(domain)).add(sumOfProducts(MsgGenerators, messages));
@@ -736,7 +732,7 @@ public class BBS extends JNI {
     }
 
     public static boolean verifySignature(G2Point PK, Signature signature, String header, Vector<String> strMessages) {
-        var messages = strMessages.map(FrElement::hashAndMap);
+        var messages = strMessages.map(Scalar::hashAndMap);
         // Definitions
         int L = messages.getLength();
         // Precomputations
@@ -749,99 +745,14 @@ public class BBS extends JNI {
         var e = signature.getSecond();
         var s = signature.getThird();
         var domArray = new Septuple<>(PK, L, Q1, Q2, MsgGenerators, CIPHERSUITE_ID, header);
-        var domain = FrElement.hashAndMap(domArray);
+        var domain = Scalar.hashAndMap(domArray);
         var B = P1.add(Q1.times(s)).add(Q2.times(domain)).add(sumOfProducts(MsgGenerators, messages));
         return A.pair(PK.add(G2Point.GENERATOR.times(e))).multiply(B.pair(P2.negate())).isOne();
     }
 
-    public static Proof generateProof(G2Point PK, Signature signature, String header, String ph, Vector<String> strMessages, IntSet disclosedIndices) {
-        var messages = strMessages.map(FrElement::hashAndMap);
-        // Definitions
-        int L = messages.getLength();
-        int R = (int) disclosedIndices.getSize();
-        int U = L - R;
-        int prfLen = FrElement.BYTE_LENGTH;
-        // Precomputations
-        var validIndices = IntSet.range(1, L);
-        var undisclosedIndices = validIndices.difference(disclosedIndices); // size = U
-        var undisclosedMessages = messages.select(undisclosedIndices);
-        var Generators = createGenerators(L + 2);
-        var Q1 = Generators.getValue(1);
-        var Q2 = Generators.getValue(2);
-        var MsgGenerators = Generators.select(IntSet.range(3, L + 2));
-        // Procedure
-        var A = signature.getFirst();
-        var e = signature.getSecond();
-        var s = signature.getThird();
-        var domArray = new Septuple<>(PK, L, Q1, Q2, MsgGenerators, CIPHERSUITE_ID, header);
-        var domain = FrElement.hashAndMap(domArray);
-        var scalars = FrElement.hashAndMap(randomBytes(prfLen), 6);
-        var r1 = scalars.getValue(1);
-        var r2 = scalars.getValue(2);
-        var e_tilde = scalars.getValue(3);
-        var r2_tilde = scalars.getValue(4);
-        var r3_tilde = scalars.getValue(5);
-        var s_tilde = scalars.getValue(6);
-        var bold_m_tilde = FrElement.hashAndMap(randomBytes(prfLen), U);
-        var B = P1.add(Q1.times(s)).add(Q2.times(domain)).add(sumOfProducts(MsgGenerators, messages));
-        var r3 = r1.inverse();
-        var A_prime = A.times(r1);
-        var A_bar = A_prime.times(e.negate()).add(B.times(r1));
-        var D = B.times(r1).add(Q1.times(r2));
-        var s_prime = r2.multiply(r3).add(s);
-        var C1 = A_prime.times(e_tilde).add(Q1.times(r2_tilde));
-        var C2 = D.times(r3_tilde.negate()).add(Q1.times(s_tilde)).add(sumOfProducts(MsgGenerators.select(undisclosedIndices), bold_m_tilde));
-        var c_array = new Decuple<>(A_prime, A_bar, D, C1, C2, R, disclosedIndices, messages.select(disclosedIndices), domain, ph);
-        var c = FrElement.hashAndMap(c_array);
-        var e_hat = e.multiply(c).add(e_tilde);
-        var r2_hat = r2.multiply(c).add(r2_tilde);
-        var r3_hat = r3.multiply(c).add(r3_tilde);
-        var s_hat = s_prime.multiply(c).add(s_tilde);
-        var bold_m_hat = undisclosedMessages.map(msg -> msg.times(c)).map(bold_m_tilde, FrElement::add);
-        return new Proof(A_prime, A_bar, D, c, e_hat, r2_hat, r3_hat, s_hat, bold_m_hat);
-    }
-
-    public static boolean verifyProof(G2Point PK, Proof proof, String header, String ph, Vector<String> disclosedStrMessages, IntSet disclosedIndices) {
-        var disclosedMessages = disclosedStrMessages.map(FrElement::hashAndMap);
-        // Definitions
-        int R = (int) disclosedIndices.getSize();
-        int U = proof.getNinth().getLength();
-        int L = R + U;
-        // Precomputations
-        var validIndices = IntSet.range(1, L);
-        var undisclosedIndices = validIndices.difference(disclosedIndices); // size = U
-        var Generators = createGenerators(L + 2);
-        var Q1 = Generators.getValue(1);
-        var Q2 = Generators.getValue(2);
-        var MsgGenerators = Generators.select(IntSet.range(3, L + 2));
-        // Preconditions
-        if (disclosedStrMessages.getLength() != R) return false;
-        if (!validIndices.containsAll(disclosedIndices)) return false;
-        // Procedure
-        var A_prime = proof.getFirst();
-        var A_bar = proof.getSecond();
-        var D = proof.getThird();
-        var c = proof.getFourth();
-        var e_hat = proof.getFifth();
-        var r2_hat = proof.getSixth();
-        var r3_hat = proof.getSeventh();
-        var s_hat = proof.getEighth();
-        var bold_m_hat = proof.getNinth();
-        var domArray = new Septuple<>(PK, L, Q1, Q2, MsgGenerators, CIPHERSUITE_ID, header);
-        var domain = FrElement.hashAndMap(domArray);
-        var C1 = A_bar.subtract(D).times(c).add(A_prime.times(e_hat).add(Q1.times(r2_hat)));
-        var T = P1.add(Q2.times(domain)).add(sumOfProducts(MsgGenerators.select(disclosedIndices), disclosedMessages));
-        var C2 = T.times(c).subtract(D.times(r3_hat)).add(Q1.times(s_hat)).add(sumOfProducts(MsgGenerators.select(undisclosedIndices), bold_m_hat));
-        var cv_array = new Decuple<>(A_prime, A_bar, D, C1, C2, R, disclosedIndices, disclosedMessages, domain, ph);
-        var cv = FrElement.hashAndMap(cv_array);
-        if (!c.equals(cv)) return false;
-        if (A_prime.isZero()) return false;
-        return A_prime.pair(PK).multiply(A_bar.pair(P2.negate())).isOne();
-    }
-
     // PRIVATE HELPER METHODS
 
-    private static G1Point sumOfProducts(Vector<G1Point> bases, Vector<FrElement> exponents) {
+    private static G1Point sumOfProducts(Vector<G1Point> bases, Vector<Scalar> exponents) {
         return bases.map(exponents, G1Point::times).toStream().reduce(G1Point.ZERO, G1Point::add);
     }
 

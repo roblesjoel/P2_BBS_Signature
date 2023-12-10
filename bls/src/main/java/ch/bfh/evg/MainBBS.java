@@ -5,25 +5,44 @@
 package ch.bfh.evg;
 
 import ch.bfh.evg.signature.BBS;
-import ch.openchvote.util.set.IntSet;
 
 import java.math.BigInteger;
 import java.util.Arrays;
-import ch.openchvote.util.sequence.Vector;
 
 public class MainBBS {
 
     public static void main(String[] args) {
+
+        // Create Generator function -> just seen that hashAndMap == hashAndMapToG1
+        // Commitment already serialized
+        // Maybe use direct connection to Gx and not GxPoint, discuss
+        // Tests
+        // Documentation
+        // Better (more descriptive) Errors
+        // Not using/not use openchvote utils, to discuss
+        // Output as Hex
+        // Ziel ist Aktueller Draft, 1 zu 1 umgesezt
+        // Logisch gesehen, Test bestehen
+        // Code 1 zu 1 pseudo code, zb concat von string octets
+        // Vector Builder
+
+        /*BigInteger R = new BigInteger("01a0111ea397fe69a4b1ba7b6434bacd764774b84f38512bf6730d2a0f6b0f6241eabfffeb153ffffb9feffffffffaaab", 16);
+
+        G2Point test = G2Point.GENERATOR.times(FrElement.of(BigInteger.TWO));
+
+        System.out.println("test");*/
+
+
 
         try{
             // Generate the keys
             byte[] key_material = new byte[256];
             byte[] key_info = new byte[0];
             byte[] key_dst = new byte[0];
-            BigInteger secretKey = BBS.generateSecretKey(key_material,key_info,key_dst);
+            BigInteger secretKey = BBS.KeyGen(key_material,key_info,key_dst);
             System.out.println("Secret Key:    " + secretKey);
-            byte[] publicKey = BBS.generatePublicKey(secretKey);
-            System.out.println("Public Key:    " + Arrays.toString(publicKey));
+            byte[] publicKey = BBS.SkToPk(secretKey);
+            System.out.println("Public Key:    " + Arrays.toString(publicKey)); // as hex
 
             // Generate and validate the Signature
             byte[][] messages = new byte[][]{("Hello").getBytes(), ("BBS").getBytes(), ("test").getBytes()};
@@ -37,6 +56,7 @@ public class MainBBS {
             // Generate and verify the Proof
             byte[][] disclosedMessages = new byte[][]{("Hello").getBytes(), ("test").getBytes()};
             int[] disclosed_indexes = new int[]{0,2};
+            // Take out Verify from ProofGen
             byte[] proof = BBS.ProofGen(publicKey, signature, header, ph, messages, disclosed_indexes); // Must first verify the signature
             System.out.println("Proof:   " + Arrays.toString(proof));
             boolean proofValid = BBS.ProofVerify(publicKey, proof, header, ph, disclosedMessages, disclosed_indexes);

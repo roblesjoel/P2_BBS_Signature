@@ -1,6 +1,6 @@
 package ch.bfh.evg.signature;
 
-import ch.bfh.evg.bls12_381.FrElement;
+import ch.bfh.evg.bls12_381.Scalar;
 import ch.bfh.evg.bls12_381.G1Point;
 import ch.bfh.evg.bls12_381.G2Point;
 import org.junit.jupiter.api.Test;
@@ -15,7 +15,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class BLSTest {
 
     static final int n = 100;
-    static final List<KeyPair<FrElement, G2Point>> keyPairs = Stream.generate(BLS::generateKeyPair).limit(n).toList();
+    static final List<KeyPair<Scalar, G2Point>> keyPairs = Stream.generate(BLS::generateKeyPair).limit(n).toList();
     static final List<String> messages = List.of("", "Message1", "Message2");
 
     @Test

@@ -10,7 +10,7 @@ import com.herumi.mcl.Mcl;
 import java.math.BigInteger;
 import java.util.stream.IntStream;
 
-public class FrElement extends FieldElement<FrElement> {
+public class Scalar extends FieldElement<Scalar> {
 
     // Source: page 17 of https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-pairing-friendly-curves-02
     public static final BigInteger MODULUS = new BigInteger("73EDA753299D7D483339D80809A1D80553BDA402FFFE5BFEFFFFFFFF00000001", 16);
@@ -18,64 +18,71 @@ public class FrElement extends FieldElement<FrElement> {
 
     final Fr fr; // package privacy
 
-    private FrElement(Fr fr) {
+    private Scalar(Fr fr) {
         this.fr = fr;
     }
 
-    public static FrElement of(BigInteger value) {
+    public static Scalar of(BigInteger value) {
         try {
             Fr fr = new Fr();
             fr.setStr(value.toString(16), 16);
-            return new FrElement(fr);
+            return new Scalar(fr);
         } catch (RuntimeException exception) {
             throw new IllegalArgumentException();
         }
     }
 
-    public static FrElement getRandom() {
+    public static Scalar getRandom() {
         Fr fr = new Fr();
         fr.setByCSPRNG();
-        return new FrElement(fr);
+        return new Scalar(fr);
     }
 
-    public static FrElement deserialize(ByteArray byteArray) throws DeserializationException {
+    public static Scalar deserialize(ByteArray byteArray) throws DeserializationException {
         try {
             Fr result = new Fr();
             result.deserialize(byteArray.toByteArray());
-            return new FrElement(result);
+            return new Scalar(result);
         } catch (RuntimeException exception) {
             throw new DeserializationException(byteArray, exception);
         }
     }
 
-    public static FrElement hashAndMap(Object input) {
+    public static Scalar hashAndMap(Object input) {
         var string = input.toString();
         var byteArray = string.getBytes();
-        var bigInt = new BigInteger(byteArray).mod(FrElement.MODULUS);
-        return FrElement.of(bigInt);
+        var bigInt = new BigInteger(byteArray).mod(Scalar.MODULUS);
+        return Scalar.of(bigInt);
     }
 
-    public static Vector<FrElement> hashAndMap(Object input, int n) {
-        var builder = new Vector.Builder<FrElement>();
+    public static Vector<Scalar> hashAndMap(Object input, int n) {
+        var builder = new Vector.Builder<Scalar>();
         IntStream.rangeClosed(1, n)
                 .mapToObj(i -> new Pair<>(input, i))
-                .map(FrElement::hashAndMap)
+                .map(Scalar::hashAndMap)
                 .forEach(builder::addValue);
         return builder.build();
     }
 
-    @Override
-    public FrElement add(FrElement other) {
-        Fr result = new Fr();
-        Mcl.add(result, this.fr, other.fr);
-        return new FrElement(result);
+    public boolean biggerThan(Scalar other){
+        BigInteger thisBigInt = new BigInteger(this.fr.toString(16), 16);
+        if(thisBigInt.compareTo(other.toBigInteger()) == 1) return true;
+        else if (thisBigInt.compareTo(other.toBigInteger()) == 0) return true;
+        return false;
     }
 
     @Override
-    public FrElement negate() {
+    public Scalar add(Scalar other) {
+        Fr result = new Fr();
+        Mcl.add(result, this.fr, other.fr);
+        return new Scalar(result);
+    }
+
+    @Override
+    public Scalar negate() {
         Fr result = new Fr();
         Mcl.neg(result, this.fr);
-        return new FrElement(result);
+        return new Scalar(result);
     }
 
     @Override
@@ -84,22 +91,22 @@ public class FrElement extends FieldElement<FrElement> {
     }
 
     @Override
-    public FrElement multiply(FrElement other) {
+    public Scalar multiply(Scalar other) {
         Fr result = new Fr();
         Mcl.mul(result, this.fr, other.fr);
-        return new FrElement(result);
+        return new Scalar(result);
     }
 
     @Override
-    public FrElement power(FrElement exponent) {
+    public Scalar power(Scalar exponent) {
         return of(this.toBigInteger().modPow(exponent.toBigInteger(), MODULUS));
     }
 
     @Override
-    public FrElement inverse() {
+    public Scalar inverse() {
         Fr result = new Fr();
         Mcl.inv(result, this.fr);
-        return new FrElement(result);
+        return new Scalar(result);
     }
 
     @Override
