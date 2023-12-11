@@ -16,11 +16,8 @@ public class PointG2 {
 
     //check if point is infinity
     public boolean isInfinity(){
-        if(this.x.getCoefficient0() == null && this.x.getCoefficient1() == null){
-            return this.y.getCoefficient0() == null && this.y.getCoefficient1() == null;
-        }else{
-            return false;
-        }
+
+        return this.x == null && this.y == null;
     }
 
 
@@ -38,7 +35,7 @@ public class PointG2 {
         }
 
         Polynomial slope = other.y.add(this.y.negate()).multiply(other.x.add(this.x.negate()).inverse());
-        Polynomial x3 = slope.pow(BigInteger.TWO).add(this.x.negate()).add(other.x.negate());
+        Polynomial x3 = slope.square().add(this.x.negate()).add(other.x.negate());
         Polynomial y3 = slope.multiply(this.x.add(x3.negate())).add(this.y.negate());
 
         return new PointG2(x3, y3);
@@ -46,15 +43,15 @@ public class PointG2 {
 
     public PointG2 doublePoint(){
 
-        Polynomial slope = this.x.pow(BigInteger.TWO).multiplyScalar(BigInteger.valueOf(3)).multiply(this.y.multiplyScalar(BigInteger.valueOf(2)).inverse());
-        Polynomial x3 = slope.pow(BigInteger.TWO).add(this.x.multiplyScalar(BigInteger.valueOf(2)).negate());
+        Polynomial slope = this.x.square().multiplyScalar(BigInteger.valueOf(3)).multiply(this.y.multiplyScalar(BigInteger.valueOf(2)).inverse());
+        Polynomial x3 = slope.square().add(this.x.multiplyScalar(BigInteger.valueOf(2)).negate());
         Polynomial y3 = slope.multiply(this.x.add(x3.negate())).add(this.y.negate());
 
         return new PointG2(x3, y3);
     }
 
     public PointG2 scalarMultiply(BigInteger k){
-        PointG2 result = new PointG2(new Polynomial(new BigInteger(String.valueOf(0)), new BigInteger(String.valueOf(0))), new Polynomial(new BigInteger(String.valueOf(0)), new BigInteger(String.valueOf(0))));
+        PointG2 result = new PointG2(null, null);
         PointG2 addend = this;
 
         while (k.compareTo(BigInteger.ZERO) > 0) {

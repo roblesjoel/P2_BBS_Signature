@@ -76,8 +76,10 @@ public class Polynomial {
 
         BigInteger temp = this.coefficient0.pow(2).subtract(BigInteger.ONE.negate().multiply(this.coefficient1.pow(2)));
 
-        BigInteger coefficient0 = this.coefficient0.multiply(temp).modInverse(P);
-        BigInteger coefficient1 = this.coefficient1.negate().multiply(temp).modInverse(P);
+        BigInteger tempInv = temp.modInverse(P);
+
+        BigInteger coefficient0 = this.coefficient0.multiply(tempInv);
+        BigInteger coefficient1 = this.coefficient1.negate().multiply(tempInv);
 
         return new Polynomial(coefficient0, coefficient1);
     }

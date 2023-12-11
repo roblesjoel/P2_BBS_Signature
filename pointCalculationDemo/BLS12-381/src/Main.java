@@ -8,8 +8,6 @@ public class Main {
 
         final BigInteger R = new BigInteger("073eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001", 16);
 
-        final BigInteger R_G2 = new BigInteger("073eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001", 16);
-
 
         PointG1 gener1 = new PointG1( new BigInteger("017F1D3A73197D7942695638C4FA9AC0FC3688C4F9774B905A14E3A3F171BAC586C55E83FF97A1AEFFB3AF00ADB22C6BB", 16),
                 new BigInteger("008b3f481e3aaa0f1a09e30ed741d8ae4fcf5e095d5d00af600db18cb2c04b3edd03cc744a2888ae40caa232946c5e7e1",16));
@@ -20,12 +18,10 @@ public class Main {
 
 
 
-        //System.out.println(gener1.scalarMultiply(BigInteger.TWO).toString());
+        System.out.println(gener1.scalarMultiply(R).toString());
 
-        //System.out.println(gener2.scalarMultiply(R_G2).toString());
+        System.out.println(gener2.scalarMultiply(R).toString());
 
-        //System.out.println(gener2.scalarMultiply(BigInteger.TWO).toString());
-        System.out.println(gener2.doublePoint().toString());
 
     }
 }
