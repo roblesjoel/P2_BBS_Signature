@@ -37,24 +37,24 @@ public class PointG2 {
             }
         }
 
-        Polynomial slope = other.y.subtract(this.y).divide(other.x.subtract(this.x).inverse()).mod(P);
-        Polynomial x3 = slope.pow(2).subtract(this.x).subtract(other.x).mod(P);
-        Polynomial y3 = slope.multiply(this.x.subtract(x3)).subtract(this.y).mod(P);
+        Polynomial slope = other.y.add(this.y.negate()).multiply(other.x.add(this.x.negate()).inverse());
+        Polynomial x3 = slope.pow(BigInteger.TWO).add(this.x.negate()).add(other.x.negate());
+        Polynomial y3 = slope.multiply(this.x.add(x3.negate())).add(this.y.negate());
 
         return new PointG2(x3, y3);
     }
 
     public PointG2 doublePoint(){
 
-        Polynomial slope = this.y.pow(2).multiplyScalar(BigInteger.valueOf(3)).multiply(this.y.multiplyScalar(BigInteger.valueOf(2))).inverse().mod(P);
-        Polynomial x3 = slope.pow(2).subtract(this.x.multiplyScalar(BigInteger.valueOf(2))).mod(P);
-        Polynomial y3 = slope.multiply(this.x.subtract(x3)).subtract(this.y).mod(P);
+        Polynomial slope = this.x.pow(BigInteger.TWO).multiplyScalar(BigInteger.valueOf(3)).multiply(this.y.multiplyScalar(BigInteger.valueOf(2)).inverse());
+        Polynomial x3 = slope.pow(BigInteger.TWO).add(this.x.multiplyScalar(BigInteger.valueOf(2)).negate());
+        Polynomial y3 = slope.multiply(this.x.add(x3.negate())).add(this.y.negate());
 
         return new PointG2(x3, y3);
     }
 
     public PointG2 scalarMultiply(BigInteger k){
-        PointG2 result = new PointG2(null, null);
+        PointG2 result = new PointG2(new Polynomial(new BigInteger(String.valueOf(0)), new BigInteger(String.valueOf(0))), new Polynomial(new BigInteger(String.valueOf(0)), new BigInteger(String.valueOf(0))));
         PointG2 addend = this;
 
         while (k.compareTo(BigInteger.ZERO) > 0) {
