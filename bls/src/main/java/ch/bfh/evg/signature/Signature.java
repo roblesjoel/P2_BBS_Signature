@@ -32,6 +32,6 @@ public class Signature {
     }
 
     public String toString() {
-        return String.format("(%s,%s,%s)", this.A.toString(), this.e.toString());
+        return String.format("(%s,%s)", this.A.toString(), this.e.toString());
     }
 }

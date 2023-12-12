@@ -13,11 +13,12 @@ import ch.bfh.evg.bls12_381.G2Point;
 import ch.bfh.evg.bls12_381.GTElement;
 import ch.bfh.evg.group.GroupElement;
 import ch.bfh.evg.jni.JNI;
+import ch.bfh.evg.proof.InitRes;
+import ch.bfh.evg.proof.Proof;
 import ch.openchvote.util.sequence.ByteArray;
 import ch.openchvote.util.sequence.Vector;
-import ch.openchvote.util.set.IntSet;
-import ch.openchvote.util.tuples.*;
 
+import java.lang.reflect.Array;
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
@@ -42,7 +43,7 @@ public class BBS extends JNI {
     private static final OctetString Octet_Scalar_Length = OctetString.valueOf(32);
     private static final OctetString Octet_Point_Length = OctetString.valueOf(48);
     private static final int Expand_Len = 48;
-    private static final Scalar r = Scalar.of(new BigInteger("073eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001", 16));
+    private static final BigInteger r = new BigInteger("073eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001", 16);
 
     /**
      * Signature
@@ -62,7 +63,7 @@ public class BBS extends JNI {
         try{
             Vector<Scalar> message_scalars = messages_to_scalars(messages, api_id);
             Vector<G1Point> generators = createGenerators(message_scalars.getLength()+1);//create_generators(message_scalars.lenght()+1, publicKey, api_id);
-            Signature signature = CoreSign(secretKey, publicKey, generators, header, message_scalars, G1Point.GENERATOR, api_id);
+            OctetString signature = CoreSign(secretKey, publicKey, generators, header, message_scalars, G1Point.GENERATOR, api_id);
             return signature;
         }catch (Exception e) {
             System.out.println(e);
@@ -107,7 +108,7 @@ public class BBS extends JNI {
      */
     private static boolean CoreVerify(OctetString publicKey, OctetString signature_octets, Vector<G1Point> generators, OctetString header, Vector<Scalar> messages, OctetString api_id) throws InvalidException, GroupElement.DeserializationException, AbortException {
         Signature signature = octets_to_signature(signature_octets);
-        G2Point W = G2Point.deserialize(publicKey.toBytes());
+        G2Point W = G2Point.deserialize(ByteArray.of(publicKey.toBytes()));
         int L = messages.getLength();
         if(generators.getLength() != (L + 1)) throw new InvalidException("To few generators or to many messages");
         G1Point Q_1 = generators.getValue(1);
@@ -126,7 +127,7 @@ public class BBS extends JNI {
     private static Vector<G1Point> getHPoints(Vector<G1Point> generators){
         Vector.Builder<G1Point> builder = new Vector.Builder<>(generators.getLength()-1);
         for (int i = 2; i <= generators.getLength(); i++) {
-            builder.setValue(i, generators.getValue(i));
+            builder.addValue(generators.getValue(i));
         }
         return builder.build();
     }
@@ -141,13 +142,13 @@ public class BBS extends JNI {
     private static Signature octets_to_signature(OctetString signature_octets) throws InvalidException, GroupElement.DeserializationException {
         int expected_len = Octet_Point_Length.toInt() + Octet_Scalar_Length.toInt();
         if(signature_octets.length != expected_len) throw new InvalidException("Signature has incorrect length");
-        OctetString A_octets = signature_octets.split(0, Octet_Point_Length.length -1);
+        OctetString A_octets = signature_octets.split(0, Octet_Point_Length.toInt() -1);
         G1Point A = G1Point.deserialize(ByteArray.of(A_octets.toBytes()));
         if(A == G1Point.ZERO) throw new InvalidException("Error while deserializing. Point in Signature is the identity point");
-        int index = Octet_Point_Length.length;
-        int end_index = index + Octet_Scalar_Length.length - 1;
+        int index = Octet_Point_Length.toInt();
+        int end_index = index + Octet_Scalar_Length.toInt() - 1;
         Scalar e = os2ip(signature_octets.split(index, end_index));
-        if(e.isZero() || e.biggerThan(r)) throw new InvalidException("Scalar e is either 0 or to big");
+        if(e.isZero() || e.toBigInteger().compareTo(r) >= 0) throw new InvalidException("Scalar e is either 0 or to big");
         return new Signature(A, e);
     }
 
@@ -175,7 +176,7 @@ public class BBS extends JNI {
         if(commitment != G1Point.ZERO) comm = serialize(new Object[]{commitment});
         Scalar e = hash_to_scalar(serialize(prepareSignSerializationData(secretKey, domain, messages, comm)), signature_dst);
         G1Point B = P1.add(Q1.times(domain).add(G1Point.sumOfScalarMultiply(H_x, messages)));
-        var A = B.times(Scalar.of(secretKey.add(e).toBigInteger().modInverse(r.toBigInteger())));
+        var A = B.times(Scalar.of(secretKey.add(e).toBigInteger().modInverse(r)));
         return signature_to_octets(new Signature(A, e));
     }
 
@@ -253,19 +254,19 @@ public class BBS extends JNI {
             switch (el.getClass().getName()) {
                 case "ch.bfh.evg.bls12_381.G1Point" -> {
                     G1Point element = (G1Point) el;
-                    octect_result.concat(new OctetString(element.serialize().toByteArray()));
+                    octect_result = octect_result.concat(new OctetString(element.serialize().toByteArray()));
                 }
                 case "ch.bfh.evg.bls12_381.G2Point" -> {
                     G2Point element = (G2Point) el;
-                    octect_result.concat(new OctetString(element.serialize().toByteArray()));
+                    octect_result = octect_result.concat(new OctetString(element.serialize().toByteArray()));
                 }
                 case "ch.bfh.evg.bls12_381.Scalar" -> {
-                    octect_result.concat(i2osp((BigInteger) el, Octet_Scalar_Length.toInt()))
+                    octect_result = octect_result.concat(i2osp((Scalar) el, Octet_Scalar_Length.toInt()));
                 }
                 case "java.lang.Integer" -> {
                     int element = (int) el;
                     if (element < 0 || element > Math.pow(2,64)-1) throw new InvalidException("Int number is to big");
-                    octect_result.concat(i2osp(BigInteger.valueOf(element), 8));
+                    octect_result = octect_result.concat(i2osp(Scalar.of(BigInteger.valueOf(element)), 8));
                 }
                 default -> throw new InvalidException("Type cannot be serialized");
             }
@@ -340,7 +341,7 @@ public class BBS extends JNI {
             if(key_dst.length == 0) key_dst = CIPHERSUITE_ID.concat("KEYGEN_DST");
             if(key_material.length < 32) throw new InvalidException("key_material is to short");
             if(key_info.length > 65535) throw new InvalidException("key_info is to long");
-            OctetString derive_input = key_material.concat(i2osp(key_info.length), 2).concat(key_info);
+            OctetString derive_input = key_material.concat(i2osp(Scalar.of(BigInteger.valueOf(key_info.length)), 2)).concat(key_info);
             Scalar SK = hash_to_scalar(derive_input, key_dst);
             return SK;
         }catch (Exception e){
@@ -381,7 +382,7 @@ public class BBS extends JNI {
      * @return The converted data
      */
     private static Scalar os2ip(OctetString data) {
-        return Scalar.of(new BigInteger(1, data.toBytes()));
+        return Scalar.of(new BigInteger(1, data.toBytes()).mod(r));
     }
 
     /**
@@ -394,7 +395,7 @@ public class BBS extends JNI {
     private static Scalar hash_to_scalar(OctetString msg_octets, OctetString dst) throws AbortException{
         if(dst.length > 255) throw new AbortException("dst is to long");
         var uniform_bytes = expand_message_xof(msg_octets, dst, Expand_Len);
-        return Scalar.of(os2ip(uniform_bytes).toBigInteger().mod(r.toBigInteger()));
+        return Scalar.of(os2ip(uniform_bytes).toBigInteger().mod(r));
     }
 
     /**
@@ -430,23 +431,30 @@ public class BBS extends JNI {
         return new OctetString(Arrays.copyOf(hashBytes, returnLength));
     }
 
-
-    // To be redefined
-
-
     /**
      * Proof
      */
 
-    public static boolean ProofVerify(byte[] publicKey, byte[] proof, byte[] header, byte[] ph, byte[][] disclosed_messages, int[] disclosed_indexes) throws InvalidException, AbortException {
+    /**
+     * Verify the Proof
+     * @param publicKey The public key as an octet string
+     * @param proof The proof as an octet string
+     * @param header The application header as an octet string
+     * @param ph The presentation header as an octet string
+     * @param disclosed_messages A Vector of octet strings of the disclosed messages
+     * @param disclosed_indexes A Vector of integers of the indexes of thr disclosed messages
+     * @return Returns true if the proof is valid
+     * @throws InvalidException Throws an Invalid Exception if some went wrong while verifying the proof
+     */
+    public static boolean ProofVerify(OctetString publicKey, OctetString proof, OctetString header, OctetString ph, Vector<OctetString> disclosed_messages, Vector<Integer> disclosed_indexes) throws InvalidException {
         try{
-            byte[] api_id = (CIPHERSUITE_ID + "H2G_HM2S_").getBytes();
-            int proof_len_floor = (2 * Octet_Point_Length) + (3 * Octet_Scalar_Length);
+            OctetString api_id =  CIPHERSUITE_ID.concat("H2G_HM2S_", StandardCharsets.US_ASCII);
+            int proof_len_floor = (2 * Octet_Point_Length.toInt()) + (3 * Octet_Scalar_Length.toInt());
             if(proof.length < proof_len_floor) throw new InvalidException("Proof is to short");
-            int U = (int) Math.floor((proof.length-proof_len_floor)/Octet_Scalar_Length);
-            int disclosedIndexesLenght = disclosed_indexes.length;
-            BigInteger[] messageScalars = messages_to_scalars(disclosed_messages, api_id);
-            Vector<G1Point> generators = createGenerators(U+disclosedIndexesLenght+1);//create_generators(message_scalars.lenght()+1, publicKey, api_id);
+            int U = (int) Math.floor((proof.length-proof_len_floor)/Octet_Scalar_Length.toInt());
+            int R = disclosed_indexes.getLength();
+            Vector<Scalar> messageScalars = messages_to_scalars(disclosed_messages, api_id);
+            Vector<G1Point> generators = createGenerators(U+R+1);//create_generators(message_scalars.lenght()+1, publicKey, api_id);
             boolean result = CoreProofVerify(publicKey, proof, generators, header, ph, messageScalars, disclosed_indexes, api_id);
             return result;
         }catch (Exception e){
@@ -455,17 +463,29 @@ public class BBS extends JNI {
         }
     }
 
-    private static boolean CoreProofVerify(byte[] publicKey, byte[] proof_octets, Vector<G1Point> generators, byte[] header, byte[] ph, BigInteger[] disclosed_messages, int[] disclosed_indexes, byte[] api_id) throws InvalidException, GroupElement.DeserializationException, AbortException {
-        Object[] proof_result = octets_to_proof(proof_octets);
-        G1Point Abar = (G1Point) proof_result[0];
-        G1Point Bbar = (G1Point) proof_result[1];
-        BigInteger r2Calc = (BigInteger) proof_result[2];
-        BigInteger r3Calc = (BigInteger) proof_result[3];
-        BigInteger[] commitments = (BigInteger[]) proof_result[4];
-        BigInteger cp = (BigInteger) proof_result[5];
-        G2Point W = G2Point.deserialize(ByteArray.of(publicKey));
-        Quadruple init_res = ProofVerifyInit(publicKey, proof_result, generators, header, disclosed_messages, disclosed_indexes, api_id);
-        BigInteger challenge = ProofChallengeCalculate(init_res, disclosed_indexes, disclosed_messages, ph, api_id);
+    /**
+     * The core proof verify function
+     * @param publicKey The public key as an octet string
+     * @param proof_octets The proof as an octet string
+     * @param generators The generators as a vector
+     * @param header The application header as an octet string
+     * @param ph The presentation header as an octet string
+     * @param disclosed_messages A Vector of scalars of the disclosed messages
+     * @param disclosed_indexes A Vector of integers of the indexes of thr disclosed messages
+     * @param api_id The api id as an Octet string
+     * @return Returns true if the proof is valid
+     * @throws InvalidException Throws this exception if the given values are incorrect
+     * @throws GroupElement.DeserializationException Throws this exception if a group element could not be deserilized
+     * @throws AbortException Throws this exception if there was an error while verifying
+     */
+    private static boolean CoreProofVerify(OctetString publicKey, OctetString proof_octets, Vector<G1Point> generators, OctetString header, OctetString ph, Vector<Scalar> disclosed_messages, Vector<Integer> disclosed_indexes, OctetString api_id) throws InvalidException, GroupElement.DeserializationException, AbortException {
+        Proof proof_result = octets_to_proof(proof_octets);
+        G1Point Abar = proof_result.getA_0();
+        G1Point Bbar = proof_result.getA_1();
+        Scalar cp = proof_result.getS_j_1();
+        G2Point W = G2Point.deserialize(ByteArray.of(publicKey.toBytes()));
+        InitRes init_res = ProofVerifyInit(publicKey, proof_result, generators, header, disclosed_messages, disclosed_indexes, api_id);
+        Scalar challenge = ProofChallengeCalculate(init_res, disclosed_indexes, disclosed_messages, ph, api_id);
         if(!cp.equals(challenge)) throw new InvalidException("Cp and challenge do not match");
         GTElement Apairing = Abar.pair(W);
         GTElement Bpairing = Bbar.pair(G2Point.GENERATOR.negate());
@@ -474,90 +494,136 @@ public class BBS extends JNI {
         return true;
     }
 
-    private static Quadruple ProofVerifyInit(byte[] publicKey, Object[] proof, Vector<G1Point> generators, byte[] header, BigInteger[] disclosed_messages, int[] disclosed_indexes, byte[] api_id) throws InvalidException, AbortException {
-        G1Point Abar = (G1Point) proof[0];
-        G1Point Bbar = (G1Point) proof[1];
-        BigInteger r2Calc = (BigInteger) proof[2];
-        BigInteger r3Calc = (BigInteger) proof[3];
-        BigInteger[] commitments = (BigInteger[]) proof[4];
-        BigInteger cp = (BigInteger) proof[5];
-        int commitmentLength = commitments.length;
-        int disclosedLength = disclosed_indexes.length;;
-        int L = commitmentLength + disclosedLength;
-        int[] indexes = new int[L];
-        for (int i = 0; i < L; i++) {
-            if(!Arrays.asList(disclosed_indexes).contains(i)) indexes[i] = i;
-        }
+    /**
+     * The proof verification init method
+     * @param PK The public key
+     * @param proof The proof object
+     * @param generators The generators
+     * @param header The application header as an octet string
+     * @param disclosed_messages A Vector of scalars of the disclosed messages
+     * @param disclosed_indexes A Vector of integers of the indexes of thr disclosed messages
+     * @param api_id The api id as an Octet string
+     * @return Returns a InitRes object
+     * @throws InvalidException Throws this exception if the given values are incorrect
+     * @throws AbortException Throws this exception if the InitRes could not be calculated
+     */
+    private static InitRes ProofVerifyInit(OctetString PK, Proof proof, Vector<G1Point> generators, OctetString header, Vector<Scalar> disclosed_messages, Vector<Integer> disclosed_indexes, OctetString api_id) throws InvalidException, AbortException {
+        G1Point Abar = proof.getA_0();
+        G1Point Bbar = proof.getA_1();
+        Scalar r2Calc = proof.getS_0();
+        Scalar r3Calc = proof.getS_1();
+        Vector<Scalar> commitments = proof.getMsg_commitments();
+        Scalar cp = proof.getS_j_1();
+        int U = commitments.getLength();
+        int R = disclosed_indexes.getLength();
+        int L = U + R;
+        Vector<Integer> ix = disclosed_indexes;
+        Vector<Integer> jx = splitIndexes(disclosed_indexes, L, U);
         if(generators.getLength() != L+1) throw new InvalidException("To many or to few generators");
-        G1Point Q1 = generators.getValue(1);
-        G1Point[] MsgGenerators = new G1Point[generators.getLength()-1];
-        G1Point[] disclosedGenerators = new G1Point[disclosedLength];
-        G1Point[] commitmentGenerators = new G1Point[commitmentLength];
-        for (int i = 2; i <= generators.getLength(); i++) {
-            G1Point generator = generators.getValue(i);
-            MsgGenerators[i-2] = generator;
-            if((i-2) < disclosedLength) disclosedGenerators[i-2] = generators.getValue(disclosed_indexes[i-2]+1);
-            if((i-2) < commitmentLength) commitmentGenerators[i-2] = generator;
-        }
-        if(disclosed_messages.length != disclosedLength) throw new AbortException("There are to many or to few disclosed messages");
-        BigInteger domain = calculate_domain(publicKey, Q1, MsgGenerators, header, api_id);
-        G1Point D = P1.add(Q1.times(Scalar.of(domain)));
-        for (int i = 0; i < disclosedLength; i++) {
-            D.add(disclosedGenerators[i].times(Scalar.of(disclosed_messages[i])));
-        }
-        G1Point T = Abar.times(Scalar.of(r2Calc)).add(Bbar.times(Scalar.of(r3Calc)));
-        for (int i = 0; i < commitmentLength; i++) {
-            T.add(commitmentGenerators[i].times(Scalar.of(commitments[i])));
-        }
-        T = T.add(D.times(Scalar.of(cp)));
-        return new Quadruple(Abar, Bbar, T, domain);
+        G1Point Q_1 = generators.getValue(1);
+        Vector<G1Point> H_x = getHPoints(generators);
+        Vector<G1Point> H_ix = getIndexedGenerators(generators, ix);
+        Vector<G1Point> H_Jx = getIndexedGenerators(generators, jx);
+        Scalar domain = calculate_domain(PK, Q_1, H_x, header, api_id);
+        G1Point D = P1.add(Q_1.times(domain)).add(G1Point.sumOfScalarMultiply(H_ix, disclosed_messages));
+        G1Point T = Abar.times(r2Calc).add(Bbar.times(r3Calc)).add(G1Point.sumOfScalarMultiply(H_Jx, commitments));
+        T = T.add(D.times(cp));
+        return new InitRes(Abar, Bbar, T, domain);
     }
 
-    private static Object[] octets_to_proof(byte[] proof_octets) throws GroupElement.DeserializationException, InvalidException {
-        int proof_len_floor = (2* Octet_Point_Length) + (3*Octet_Scalar_Length);
+    /**
+     * Get generators from a generator vector at the given indexes
+     * @param generators The generator vector
+     * @param indexes The indexes of the wanted generators
+     * @return A new generator vector
+     */
+    private static Vector<G1Point> getIndexedGenerators(Vector<G1Point> generators, Vector<Integer> indexes){
+        Vector.Builder<G1Point> builder = new Vector.Builder<>(generators.getLength()-1);
+        for (int disclosedIndex: indexes) {
+            builder.addValue(generators.getValue(disclosedIndex));
+        }
+        return builder.build();
+    }
+
+    /**
+     * Get the undisclosed indexes given the disclosed indexes
+     * @param disclosed_indexes The disclosed indexes
+     * @param L How many total indexes there are
+     * @param U Count of undisclosed indexes
+     * @return A Vector of the undisclosed indexes
+     */
+    private static Vector<Integer> splitIndexes(Vector<Integer> disclosed_indexes, int L, int U){
+        Vector.Builder<Integer> builder = new Vector.Builder<>(U);
+        for (int i = 1; i <= L; i++) {
+            boolean found = false;
+            for (int j = 1; j <= disclosed_indexes.getLength() ; j++) {
+                if(disclosed_indexes.getValue(j) == i) {
+                    found = true;
+                    break;
+                }
+            }
+            if(!found) builder.addValue(i);
+        }
+        return builder.build();
+    }
+
+    /**
+     * Returns the Proof from the given octets
+     * @param proof_octets The proof octets
+     * @return The Proof object
+     * @throws GroupElement.DeserializationException Throws this error when a point could not be deserialized
+     * @throws InvalidException Throw this error if an input is not correct
+     */
+    private static Proof octets_to_proof(OctetString proof_octets) throws GroupElement.DeserializationException, InvalidException {
+        int proof_len_floor = (2* Octet_Point_Length.toInt()) + (3*Octet_Scalar_Length.toInt());
         if(proof_octets.length < proof_len_floor) throw new InvalidException("To few proof octets");
         G1Point[] proofPoints = new G1Point[2];
         int index = 0;
-        for (int i = 0; i < 2; i++) {
-            int end_index = index + Octet_Point_Length - 1;
-            byte[] octets = Arrays.copyOfRange(proof_octets, index, end_index + 1);
-            G1Point A_i = G1Point.deserialize(ByteArray.of(octets));
+        for (int i = 0; i <= 1; i++) {
+            int end_index = index + Octet_Point_Length.toInt() - 1;
+            G1Point A_i = G1Point.deserialize(ByteArray.of(proof_octets.split(index, end_index).toBytes()));
             if(A_i.isZero()) throw new InvalidException("A_i is identity");
             proofPoints[i] = A_i;
-            index += Octet_Point_Length;
+            index += Octet_Point_Length.toInt();
         }
-        ArrayList<BigInteger> scalars = new ArrayList<>();
+        ArrayList<Scalar> scalars = new ArrayList<>();
         int j = 0;
-        for (;index < proof_octets.length; index += Octet_Scalar_Length) {
-            int end_index = index + Octet_Scalar_Length - 1;
-            byte[] octets = Arrays.copyOfRange(proof_octets, index, end_index + 1);
-            BigInteger s_j = os2ip(octets);
-            if(s_j.equals(BigInteger.ZERO) || s_j.compareTo(r) >= 0) throw new InvalidException("Scalar is zero or bigger than r");
+        while(index< proof_octets.length){
+            int end_index = index + Octet_Scalar_Length.toInt() - 1;
+            Scalar s_j = os2ip(proof_octets.split(index, end_index));
+            if(s_j.equals(Scalar.of(BigInteger.ZERO)) || s_j.biggerOrSameThan(r)) throw new InvalidException("Scalar is zero or bigger than r");
             scalars.add(s_j);
+            index += Octet_Scalar_Length.toInt();
             j += 1;
         }
         if(index != proof_octets.length) throw new InvalidException("Index length is not the same as the octet length");
-        BigInteger[] msg_commitments = new BigInteger[j-3];
+        Vector.Builder<Scalar> builder = new Vector.Builder<>(j-3);
         if(j > 3){
             for (int i = 3; i < j; i++) {
-                msg_commitments[i-3] = scalars.get(i);
+                 builder.addValue(scalars.get(i));
             }
         }
-        Object[] proof = new Object[6];
-        System.arraycopy(proofPoints, 0, proof, 0, proofPoints.length);
-        proof[2] = scalars.get(0);
-        proof[3] = scalars.get(1);
-        proof[4] = msg_commitments;
-        proof[5] = scalars.get(scalars.size()-1);
-        return proof;
+        Vector<Scalar> msg_commitments = builder.build();
+        return new Proof(proofPoints[0], proofPoints[1], scalars.get(0), scalars.get(1), msg_commitments, scalars.get(scalars.size()-1));
     }
 
-    public static byte[] ProofGen(byte[] publicKey, byte[] signature, byte[] header, byte[] ph, byte[][] messages, int[] disclosed_indexes) throws InvalidException {
-        byte[] api_id = (CIPHERSUITE_ID + "H2G_HM2S_").getBytes();
+    /**
+     * The Proof generation function
+     * @param publicKey The public key an Octet string
+     * @param signature The signature as an octet string
+     * @param header The application header as an octet string
+     * @param ph The presentation header as an octet string
+     * @param messages A vector of all messages
+     * @param disclosed_indexes The indexes to be disclosed
+     * @return The proof as an octet string
+     * @throws InvalidException Throws this exception if the generated proof is invalid
+     */
+    public static OctetString ProofGen(OctetString publicKey, OctetString signature, OctetString header, OctetString ph, Vector<OctetString> messages, Vector<Integer> disclosed_indexes) throws InvalidException {
         try{
-            BigInteger[] message_scalars = messages_to_scalars(messages, api_id);
-            Vector<G1Point> generators = createGenerators(message_scalars.length+1);//create_generators(message_scalars.lenght()+1, publicKey, api_id);
-            byte[] proof = CoreProofGen(publicKey, signature, generators, header, ph, message_scalars, disclosed_indexes, api_id);
+            OctetString api_id = CIPHERSUITE_ID.concat("H2G_HM2S_", StandardCharsets.US_ASCII);
+            Vector<Scalar> message_scalars = messages_to_scalars(messages, api_id);
+            Vector<G1Point> generators = createGenerators(message_scalars.getLength()+1);//create_generators(message_scalars.lenght()+1, publicKey, api_id);
+            OctetString proof = CoreProofGen(publicKey, signature, generators, header, ph, message_scalars, disclosed_indexes, api_id);
             return proof;
         }catch (Exception e) {
             System.out.println(e);
@@ -565,198 +631,171 @@ public class BBS extends JNI {
         }
     }
 
-    private static byte[] CoreProofGen(byte[] publicKey, byte[] signature_octets, Vector<G1Point> generators, byte[] header, byte[] ph, BigInteger[] messages, int[] disclosed_indexes, byte[] api_id) throws InvalidException, GroupElement.DeserializationException, AbortException {
+    /**
+     * The core proof generation method
+     * @param publicKey The public key as octets
+     * @param signature_octets The signature as octets
+     * @param generators A Vector of generators
+     * @param header The application header as an octet string
+     * @param ph The presentation header as an octet string
+     * @param messages A vector of all messages
+     * @param disclosed_indexes The indexes to be disclosed
+     * @param api_id The api_id
+     * @return Returns the proof as an Octet string
+     * @throws InvalidException Throws this exception if the input is invalid
+     * @throws GroupElement.DeserializationException Throws this error if a point cannot be serialized
+     * @throws AbortException Throws this exception if there is an error while generating the proof
+     */
+    private static OctetString CoreProofGen(OctetString publicKey, OctetString signature_octets, Vector<G1Point> generators, OctetString header, OctetString ph, Vector<Scalar> messages, Vector<Integer> disclosed_indexes, OctetString api_id) throws InvalidException, GroupElement.DeserializationException, AbortException {
         Signature signature = octets_to_signature(signature_octets);
-        int messagesCount = messages.length;
-        int disclosedCount = disclosed_indexes.length;
-        if(disclosedCount > messagesCount) throw new InvalidException("More disclosed indexes than messages");
-        int undisclosedCount = messagesCount-disclosedCount;
-        int[] not_disclosed_indexes = new int[undisclosedCount];
-        int counter = 0;
-        for (int i = 0; i < messagesCount; i++) {
-            int tempI = i;
-            if(IntStream.of(disclosed_indexes).anyMatch(x -> x == tempI)) continue;
-            not_disclosed_indexes[counter] = i;
-            counter++;
-        }
-        BigInteger[] disclosed_messages = new BigInteger[disclosedCount];
-        BigInteger[] undisclosed_messages = new BigInteger[undisclosedCount];
-        for (int i = 0; i < disclosedCount; i++) {
-            disclosed_messages[i] = messages[disclosed_indexes[i]];
-        }
-        for (int i = 0; i < undisclosedCount; i++) {
-            undisclosed_messages[i] = messages[not_disclosed_indexes[i]];
-        }
-        BigInteger[] random_scalars = calculate_random_scalars(3+undisclosedCount);
-        Quadruple init_res = ProofInit(publicKey, signature, generators, random_scalars, header, messages, not_disclosed_indexes, api_id);
-        BigInteger challenge = ProofChallengeCalculate(init_res, disclosed_indexes, disclosed_messages, ph, api_id);
-        var proof = ProofFinalize(init_res, challenge, signature.getSecond().toBigInteger(), random_scalars, undisclosed_messages);
+        int L = messages.getLength();
+        int R = disclosed_indexes.getLength();
+        if(R > L) throw new InvalidException("More disclosed indexes than messages");
+        int U = L-R;
+        Vector<Integer> undisclosed_indexes = splitIndexes(disclosed_indexes, L, U);
+        Vector<Integer> ix = disclosed_indexes;
+        Vector<Integer> jx = undisclosed_indexes;
+        Vector<Scalar> disclosed_messages = getIndexedMessages(messages, ix);
+        Vector<Scalar> undisclosed_messages = getIndexedMessages(messages, jx);
+        Vector<Scalar> random_scalars = calculate_random_scalars(3+U);
+        InitRes init_res = ProofInit(publicKey, signature, generators, random_scalars, header, messages, undisclosed_indexes, api_id);
+        Scalar challenge = ProofChallengeCalculate(init_res, disclosed_indexes, disclosed_messages, ph, api_id);
+        OctetString proof = ProofFinalize(init_res, challenge, signature.getScalar(), random_scalars, undisclosed_messages);
         return proof;
     }
 
-    public static byte[] ProofFinalize(Quadruple init_res, BigInteger challenge, BigInteger e_value, BigInteger[] random_scalars, BigInteger[] undisclosed_messages) throws InvalidException {
-        int undisclosedLength = undisclosed_messages.length;
-        if(random_scalars.length != (undisclosedLength+3)) throw new InvalidException("There to many or to few random scalars");
-        BigInteger r1 = random_scalars[0];
-        BigInteger r2 = random_scalars[1];
-        BigInteger r3 = random_scalars[2];
-        BigInteger[] randomScalarsCut = new BigInteger[random_scalars.length-3];
-        System.arraycopy(random_scalars, 3, randomScalarsCut, 0, random_scalars.length-3);
-        G1Point Abar = (G1Point) init_res.getFirst();
-        G1Point Bbar = (G1Point) init_res.getSecond();
-        BigInteger r4 = r1.modInverse(r).negate();
-        BigInteger r2Calc = r2.add(e_value.multiply(r4).multiply(challenge)).mod(r);
-        BigInteger r3Calc = r3.add(r4.multiply(challenge)).mod(r);
-        BigInteger[] calcMessages = new BigInteger[undisclosedLength];
-        for (int i = 0; i < undisclosedLength; i++) {
-            BigInteger calcMessage = randomScalarsCut[i].add(undisclosed_messages[i].multiply(challenge)).mod(r);
-            calcMessages[i] = calcMessage;
+    /**
+     * Get messages from a messages vector at the given indexes
+     * @param messages The vector of messages
+     * @param indexes The indexes of the wanted messages
+     * @return A new messages vector
+     */
+    private static Vector<Scalar> getIndexedMessages(Vector<Scalar> messages, Vector<Integer> indexes){
+        Vector.Builder<Scalar> builder = new Vector.Builder<>(indexes.getLength());
+        for (int disclosedIndex: indexes) {
+            builder.addValue(messages.getValue(disclosedIndex));
         }
-        Object[] proof = new Object[5 + calcMessages.length];
-        proof[0] = Abar;
-        proof[1] = Bbar;
-        proof[2] = r2Calc;
-        proof[3] = r3Calc;
-        System.arraycopy(calcMessages, 0, proof, 4, calcMessages.length);
-        proof[proof.length-1] = challenge;
+        return builder.build();
+    }
+
+    /**
+     * Finalize the proof
+     * @param init_res The response of the ProofInit function
+     * @param challenge The challange scalar
+     * @param e_value The e value of the signature (scalar)
+     * @param random_scalars Random scalars
+     * @param undisclosed_messages The undisclosed messages
+     * @return The proof as an octet string
+     * @throws InvalidException Throws this exception if the inputs are wrong
+     */
+    public static OctetString ProofFinalize(InitRes init_res, Scalar challenge, Scalar e_value, Vector<Scalar> random_scalars, Vector<Scalar> undisclosed_messages) throws InvalidException {
+        int U = undisclosed_messages.getLength();
+        if(random_scalars.getLength() != (U+3)) throw new InvalidException("There to many or to few random scalars");
+        Scalar r1 = random_scalars.getValue(1);
+        Scalar r2 = random_scalars.getValue(2);
+        Scalar r3 = random_scalars.getValue(3);
+        Vector<Scalar> m_x = splitScalarVector(random_scalars, 4);
+        Vector<Scalar> undisclosed_x = undisclosed_messages;
+        G1Point Abar = init_res.getAbar();
+        G1Point Bbar = init_res.getBbar();
+        Scalar r4 = Scalar.of(r1.toBigInteger().modInverse(r).negate());
+        Scalar r2Calc = Scalar.of(r2.add(e_value.multiply(r4).multiply(challenge)).toBigInteger().mod(r));
+        Scalar r3Calc = Scalar.of(r3.add(r4.multiply(challenge)).toBigInteger().mod(r));
+        Vector.Builder<Scalar> builder = new Vector.Builder<>(U);
+        for (int i = 1; i <= U; i++) {
+            builder.addValue(Scalar.of(m_x.getValue(i).add(undisclosed_x.getValue(i).multiply(challenge)).toBigInteger().mod(r)));
+        }
+        Vector<Scalar> m_j = builder.build();
+        Proof proof = new Proof(Abar, Bbar, r2Calc, r3Calc, m_j, challenge);
         return proof_to_octets(proof);
     }
 
-    private static byte[] proof_to_octets(Object[] proof) throws InvalidException {
-        return serialize(proof);
+    /**
+     * Split a Scalar Vector
+     * @param scalars The scalar vector
+     * @param start Where to split
+     * @return A new Scalar vector starting at the given start position
+     */
+    private static Vector<Scalar> splitScalarVector(Vector<Scalar> scalars, int start){
+        Vector.Builder<Scalar> builder = new Vector.Builder<>(scalars.getLength()-start+1);
+        for (int i = start; i <= scalars.getLength(); i++) {
+            builder.addValue(scalars.getValue(i));
+        }
+        return builder.build();
     }
 
-    public static BigInteger ProofChallengeCalculate(Quadruple init_res, int[] i_array, BigInteger[] msg_array, byte[] ph, byte[] api_id) throws AbortException, InvalidException {
-        byte[] dst = ("H2S_").getBytes();
-        byte[] challenge_dst = new byte[api_id.length+ dst.length];
-        System.arraycopy(api_id, 0, challenge_dst, 0, api_id.length);
-        System.arraycopy(dst, 0, challenge_dst, api_id.length, dst.length);
-        int disclosedMessagesIndex = i_array.length;
-        if(disclosedMessagesIndex > Math.pow(2,64)-1 || disclosedMessagesIndex != msg_array.length) throw new AbortException("To many or to few message indexes");
+    /**
+     * Serialize the proof to octets
+     * @param proof The proof Object
+     * @return The serialized proof
+     * @throws InvalidException Throws this error if there is a problem while serializing
+     */
+    private static OctetString proof_to_octets(Proof proof) throws InvalidException {
+        return serialize(proof.toObjectArray());
+    }
+
+    /**
+     * Calculate the challenge of the proof
+     * @param init_res The ProofInit response
+     * @param i_array The indexes of the disclosed messages
+     * @param msg_array The vector of the disclosed message scalars
+     * @param ph The presentation header as an octet string
+     * @param api_id The api id octets
+     * @return The challenge as a scalar
+     * @throws AbortException Throws this exception if the challenge calculation failed
+     * @throws InvalidException Throws this exception if the inputs are invalid
+     */
+    public static Scalar ProofChallengeCalculate(InitRes init_res, Vector<Integer> i_array, Vector<Scalar> msg_array, OctetString ph, OctetString api_id) throws AbortException, InvalidException {
+        OctetString challenge_dst = api_id.concat("H2S_", StandardCharsets.US_ASCII);
+        int R = i_array.getLength();
+        if(R > Math.pow(2,64)-1 || R != msg_array.getLength()) throw new AbortException("To many or to few message indexes");
         if (ph.length > Math.pow(2,64)-1) throw new AbortException("Ph is to long");
-        Object[] c_arr = new Object[4 + i_array.length + msg_array.length]; // Abar, Bbar, T, lenght + irray lenght, + msg lenght + domain
-        c_arr[0] = init_res.getFirst();
-        c_arr[1] = init_res.getSecond();
-        c_arr[2] = init_res.getThird();
-        for (int i = 0; i < i_array.length ; i++) {
-            c_arr[i+3] = i_array[i];
-        }
-        System.arraycopy(msg_array, 0, c_arr, 3+i_array.length, msg_array.length);
-        c_arr[c_arr.length-1] = init_res.getFourth();
-        byte[] serializedData = serialize(c_arr);
-        byte[] serilizedPhLenght = i2osp(BigInteger.valueOf(ph.length), 8);
-        byte[] c_octs = new byte[serializedData.length + serilizedPhLenght.length + ph.length];
-        System.arraycopy(serializedData, 0, c_octs, 0, serializedData.length);
-        System.arraycopy(serilizedPhLenght, 0, c_octs, serializedData.length, serilizedPhLenght.length);
-        System.arraycopy(ph, 0, c_octs, serializedData.length + serilizedPhLenght.length, ph.length);
+        Object[] c_arr = createCArray(init_res, i_array, msg_array);
+        OctetString c_octs = serialize(c_arr).concat(i2osp(Scalar.of(BigInteger.valueOf(ph.length)),8)).concat(ph);
         return hash_to_scalar(c_octs, challenge_dst);
     }
 
-    public static Quadruple ProofInit(byte[] publicKey, Signature signature, Vector<G1Point> generators, BigInteger[] random_scalars, byte[] header, BigInteger[] messages, int[] undisclosed_indexes, byte[] api_id) throws InvalidException, AbortException {
-        int messageCount = messages.length;
-        int undisclosedCount = undisclosed_indexes.length;
-        if(undisclosedCount > messageCount) throw new AbortException("The number of the undisclosed messages is higher than the number of the disclosed messages");
-        if(random_scalars.length != (undisclosedCount+3)) throw new InvalidException("The number of Random Scalars needs to be the same as the number of undisclosed indexes + 3");
-        BigInteger r1 = random_scalars[0];
-        BigInteger r2 = random_scalars[1];
-        BigInteger r3 = random_scalars[2];
-        BigInteger[] randomScalarsCut = new BigInteger[random_scalars.length-3];
-        System.arraycopy(random_scalars, 3, randomScalarsCut, 0, random_scalars.length-3);
-        if (generators.getLength() != (messageCount+1)) throw new InvalidException("The number of generators is not the same as the number of messages + 1");
-        G1Point Q1 = generators.getValue(1);
-        G1Point[] MsgGenerators = new G1Point[generators.getLength()-1];
-        for (int i = 2; i <= generators.getLength(); i++) {
-            MsgGenerators[i-2] = generators.getValue(i);
+    /**
+     * Calculates the c_arr used in ProofChallengeCalculate
+     * @param init_res The ProofInit response
+     * @param i_array The indexes of the disclosed messages
+     * @param msg_array The vector of the message scalars
+     * @return The c_arr
+     */
+    private static Object[] createCArray(InitRes init_res, Vector<Integer> i_array, Vector<Scalar> msg_array){
+        Object[] c_arr = new Object[4 + i_array.getLength() + msg_array.getLength()];
+        c_arr[0] = init_res.getAbar();
+        c_arr[1] = init_res.getBbar();
+        c_arr[2] = init_res.getT();
+        c_arr[3] = i_array.getLength();
+        for (int i = 1; i <= i_array.getLength() ; i++) {
+            c_arr[i+3] = i_array.getValue(i);
         }
-        G1Point[] undisclosedGenerators = new G1Point[undisclosedCount];
-        for (int i = 0; i < undisclosed_indexes.length; i++) {
-            int undisclosedIndex = undisclosed_indexes[i];
-            if(undisclosedIndex < 0 || undisclosedIndex >= messageCount) throw new AbortException("Undisclosed message index out of range");
-            undisclosedGenerators[i] = generators.getValue(undisclosedIndex+1);
+        for (int i = +1; i <= msg_array.getLength() ; i++) {
+            c_arr[i+i_array.getLength()+3] = msg_array.getValue(i);
         }
-        BigInteger domain = calculate_domain(publicKey, Q1, MsgGenerators, header, api_id);
-        G1Point B = P1.add(Q1.times(Scalar.of(domain)));
-        for (int i = 1; i <= messageCount; i++) {
-            BigInteger message = messages[i-1];
-            B.add(generators.getValue(i).times(Scalar.of(message)));
-        }
-        G1Point Abar = signature.getFirst().times(Scalar.of(r1));
-        G1Point Abare = Abar.times(signature.getSecond());
-        G1Point Bbar = B.times(Scalar.of(r1)).subtract(Abare);
-        G1Point BbarR3 = Bbar.times(Scalar.of(r3));
-        G1Point T = Abar.times(Scalar.of(r2)).add(BbarR3);
-        for (int i = 0; i < undisclosedGenerators.length; i++) {
-            G1Point temp = undisclosedGenerators[i].times(Scalar.of(randomScalarsCut[i]));
-            T.add(temp);
-        }
-        return new Quadruple(Abar, Bbar, T, domain);
+        c_arr[c_arr.length-1] = init_res.getFourth();
+        return c_arr;
     }
 
-    public static BigInteger[] calculate_random_scalars(int count){
-        BigInteger[] randomScalars = new BigInteger[count];
+    /**
+     * Generates random scalars
+     * @param count How many scalars to generate
+     * @return A Vector of the generated Scalars
+     */
+    public static Vector<Scalar> calculate_random_scalars(int count){
+        Vector.Builder<Scalar> builder = new Vector.Builder<>(count);
         for (int i = 0; i < count; i++) {
-            randomScalars[i] = os2ip(randomBytes(Expand_Len)).mod(r);
+            builder.addValue(Scalar.of(os2ip(randomBytes(Expand_Len)).toBigInteger().mod(r)));
         }
-        return randomScalars;
+        return builder.build();
     }
 
-
-
-
-
-
-
-
-    // SIGNATURE SCHEME METHODS
-
-
-
-    public static Signature generateSignature(Scalar sk, G2Point PK, String header, Vector<String> strMessages) {
-        var messages = strMessages.map(Scalar::hashAndMap);
-        // Definitions
-        int L = messages.getLength();
-        // Precomputations
-        var Generators = createGenerators(L + 2);
-        var Q1 = Generators.getValue(1);
-        var Q2 = Generators.getValue(2);
-        var MsgGenerators = Generators.select(IntSet.range(3, L + 2));
-        // Procedure
-        var domArray = new Septuple<>(PK, L, Q1, Q2, MsgGenerators, CIPHERSUITE_ID, header);
-        var domain = Scalar.hashAndMap(domArray);
-        var e_s = Scalar.hashAndMap(new Triple<>(sk, domain, messages), 2);
-        var e = e_s.getValue(1);
-        var s = e_s.getValue(2);
-        var B = P1.add(Q1.times(s)).add(Q2.times(domain)).add(sumOfProducts(MsgGenerators, messages));
-        var A = B.times(sk.add(e).inverse());
-        return new Signature(A, e, s);
-    }
-
-    public static boolean verifySignature(G2Point PK, Signature signature, String header, Vector<String> strMessages) {
-        var messages = strMessages.map(Scalar::hashAndMap);
-        // Definitions
-        int L = messages.getLength();
-        // Precomputations
-        var Generators = createGenerators(L + 2);
-        var Q1 = Generators.getValue(1);
-        var Q2 = Generators.getValue(2);
-        var MsgGenerators = Generators.select(IntSet.range(3, L + 2));
-        // Procedure
-        var A = signature.getFirst();
-        var e = signature.getSecond();
-        var s = signature.getThird();
-        var domArray = new Septuple<>(PK, L, Q1, Q2, MsgGenerators, CIPHERSUITE_ID, header);
-        var domain = Scalar.hashAndMap(domArray);
-        var B = P1.add(Q1.times(s)).add(Q2.times(domain)).add(sumOfProducts(MsgGenerators, messages));
-        return A.pair(PK.add(G2Point.GENERATOR.times(e))).multiply(B.pair(P2.negate())).isOne();
-    }
-
-    // PRIVATE HELPER METHODS
-
-    private static G1Point sumOfProducts(Vector<G1Point> bases, Vector<Scalar> exponents) {
-        return bases.map(exponents, G1Point::times).toStream().reduce(G1Point.ZERO, G1Point::add);
-    }
-
-    // simplified version for testing
+    /**
+     * Create a number of random generators
+     * @param count How many generators to create
+     * @return T Vector of the generated generators
+     */
     private static Vector<G1Point> createGenerators(int count) {
         var builder = new Vector.Builder<G1Point>();
         IntStream.rangeClosed(1, count)
@@ -766,10 +805,51 @@ public class BBS extends JNI {
         return builder.build();
     }
 
-    private static byte[] randomBytes(int n) {
+    /**
+     * Generates random bytes
+     * @param n How many bytes to generate
+     * @return The Octet string of the random bytes
+     */
+    private static OctetString randomBytes(int n) {
         var randomBytes = new byte[n];
         SECURE_RANDOM.nextBytes(randomBytes);
-        return randomBytes;
+        return new OctetString(randomBytes);
     }
 
+    /**
+     *
+     * @param publicKey
+     * @param signature
+     * @param generators
+     * @param random_scalars
+     * @param header
+     * @param messages
+     * @param undisclosed_indexes
+     * @param api_id
+     * @return
+     * @throws InvalidException
+     * @throws AbortException
+     */
+    private static InitRes ProofInit(OctetString publicKey, Signature signature, Vector<G1Point> generators, Vector<Scalar> random_scalars, OctetString header, Vector<Scalar> messages, Vector<Integer> undisclosed_indexes, OctetString api_id) throws InvalidException, AbortException {
+        int L = messages.getLength();
+        int U = undisclosed_indexes.getLength();
+        Vector<Integer> jx = undisclosed_indexes;
+        if(random_scalars.getLength() != (U+3)) throw new InvalidException("The number of Random Scalars needs to be the same as the number of undisclosed indexes + 3");
+        Scalar r1 = random_scalars.getValue(1);
+        Scalar r2 = random_scalars.getValue(2);
+        Scalar r3 = random_scalars.getValue(3);
+        Vector<Scalar> m_jx = splitScalarVector(random_scalars, 4);
+        if (generators.getLength() != (L+1)) throw new InvalidException("The number of generators is not the same as the number of messages + 1");
+        G1Point Q1 = generators.getValue(1);
+        Vector<G1Point> MsgGenerators = getHPoints(generators);
+        Vector<G1Point> H_x = MsgGenerators;
+        Vector<G1Point> H_jx = getIndexedGenerators(generators, jx);
+        if(U>L) throw new AbortException("More undisclosed indexes than messages");
+        Scalar domain = calculate_domain(publicKey, Q1, MsgGenerators, header, api_id);
+        G1Point B = P1.add(Q1.times(domain)).add(G1Point.sumOfScalarMultiply(H_x, messages));
+        G1Point Abar = signature.getPoint().times(r1);
+        G1Point Bbar = B.times(r1).subtract(Abar.times(signature.getScalar()));
+        G1Point T = Abar.times(r2).add(Bbar.times(r3)).add(G1Point.sumOfScalarMultiply(H_jx, m_jx));
+        return new InitRes(Abar, Bbar, T, domain);
+    }
 }

@@ -127,3 +127,5 @@ public class G1Point extends ECPoint<G1Point, Scalar, FpElement> {
     }
 
 }
+
+

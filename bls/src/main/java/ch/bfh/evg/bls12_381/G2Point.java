@@ -37,10 +37,10 @@ public class G2Point extends ECPoint<G2Point, Scalar, Pair<FpElement, FpElement>
         return GENERATOR.times(Scalar.getRandom());
     }
 
-    public static G2Point deserialize(byte[] byteArray) throws DeserializationException {
+    public static G2Point deserialize(ByteArray byteArray) throws DeserializationException {
         try {
             G2 result = new G2();
-            result.deserialize(byteArray);
+            result.deserialize(byteArray.toByteArray());
             return new G2Point(result);
         } catch (RuntimeException exception) {
             throw new DeserializationException(byteArray, exception);

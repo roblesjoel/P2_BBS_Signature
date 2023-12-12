@@ -64,10 +64,14 @@ public class Scalar extends FieldElement<Scalar> {
         return builder.build();
     }
 
-    public boolean biggerThan(Scalar other){
+    public boolean biggerOrSameThan(Scalar other){
+        return biggerOrSameThan(other.toBigInteger());
+    }
+
+    public boolean biggerOrSameThan(BigInteger other){
         BigInteger thisBigInt = new BigInteger(this.fr.toString(16), 16);
-        if(thisBigInt.compareTo(other.toBigInteger()) == 1) return true;
-        else if (thisBigInt.compareTo(other.toBigInteger()) == 0) return true;
+        if(thisBigInt.compareTo(other) == 1) return true;
+        else if (thisBigInt.compareTo(other) == 0) return true;
         return false;
     }
 
