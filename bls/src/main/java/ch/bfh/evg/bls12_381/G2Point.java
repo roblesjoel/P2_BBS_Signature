@@ -23,7 +23,7 @@ public class G2Point extends ECPoint<G2Point, Scalar, Pair<FpElement, FpElement>
 
     final G2 g2;  // package privacy
 
-    private G2Point(G2 g2) {
+    public G2Point(G2 g2) {
         this.g2 = g2;
     }
 

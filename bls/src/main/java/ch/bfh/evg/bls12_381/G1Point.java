@@ -21,7 +21,7 @@ public class G1Point extends ECPoint<G1Point, Scalar, FpElement> {
 
     final G1 g1;  // package privacy
 
-    private G1Point(G1 g1) {
+    public G1Point(G1 g1) {
         this.g1 = g1;
     }
 
