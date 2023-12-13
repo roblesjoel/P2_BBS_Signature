@@ -380,7 +380,7 @@ public class BBS extends JNI {
      * @param data the octets to be converted
      * @return The converted data
      */
-    static Scalar os2ip(OctetString data) {
+    private static Scalar os2ip(OctetString data) {
         return Scalar.of(new BigInteger(1, data.toBytes()));
     }
 
@@ -391,7 +391,7 @@ public class BBS extends JNI {
      * @return The hashed message as a scalar
      * @throws AbortException Throws an exception id the dst is too long
      */
-    static Scalar hash_to_scalar(OctetString msg_octets, OctetString dst) throws AbortException{
+    private static Scalar hash_to_scalar(OctetString msg_octets, OctetString dst) throws AbortException{
         if(dst.length > 255) throw new AbortException("dst is to long");
         var uniform_bytes = expand_message_xof(msg_octets, dst, Expand_Len);
         return Scalar.of(os2ip(uniform_bytes).toBigInteger().mod(r.toBigInteger()));
@@ -406,7 +406,7 @@ public class BBS extends JNI {
      * @throws AbortException Throws an exception if len_in_bytes or DST are too big
      * as defined in https://datatracker.ietf.org/doc/html/rfc9380#name-expand_message_xof
      */
-    public static OctetString expand_message_xof(OctetString msg, OctetString dst, int len_in_bytes) throws AbortException {
+    private static OctetString expand_message_xof(OctetString msg, OctetString dst, int len_in_bytes) throws AbortException {
         if(len_in_bytes > 65535 || dst.length > 255) throw new AbortException("Either len_in_bytes or DST is to big");
         OctetString serializedDstLenght = i2osp(Scalar.of(BigInteger.valueOf(dst.length)),1);
         OctetString dstPrime = dst.concat(serializedDstLenght);
@@ -757,7 +757,7 @@ public class BBS extends JNI {
     }
 
     // simplified version for testing
-    static Vector<G1Point> createGenerators(int count) {
+    private static Vector<G1Point> createGenerators(int count) {
         var builder = new Vector.Builder<G1Point>();
         IntStream.rangeClosed(1, count)
                 .mapToObj(i -> "Generator-" + i)

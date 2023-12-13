@@ -4,9 +4,12 @@
 
 package ch.bfh.evg;
 
+import ch.bfh.evg.bls12_381.Scalar;
 import ch.bfh.evg.signature.BBS;
+import ch.bfh.evg.signature.OctetString;
+import ch.openchvote.util.sequence.Vector;
+import ch.openchvote.util.set.IntSet;
 
-import java.math.BigInteger;
 import java.util.Arrays;
 
 public class MainBBS {
@@ -14,7 +17,6 @@ public class MainBBS {
     public static void main(String[] args) {
 
         // Create Generator function -> just seen that hashAndMap == hashAndMapToG1
-        // Commitment already serialized
         // Maybe use direct connection to Gx and not GxPoint, discuss
         // Tests
         // Documentation
@@ -23,43 +25,40 @@ public class MainBBS {
         // Output as Hex
         // Ziel ist Aktueller Draft, 1 zu 1 umgesezt
         // Logisch gesehen, Test bestehen
-        // Code 1 zu 1 pseudo code, zb concat von string octets
-        // Vector Builder
-
-        /*BigInteger R = new BigInteger("01a0111ea397fe69a4b1ba7b6434bacd764774b84f38512bf6730d2a0f6b0f6241eabfffeb153ffffb9feffffffffaaab", 16);
-
-        G2Point test = G2Point.GENERATOR.times(FrElement.of(BigInteger.TWO));
-
-        System.out.println("test");*/
-
-
 
         try{
             // Generate the keys
-            byte[] key_material = new byte[256];
-            byte[] key_info = new byte[0];
-            byte[] key_dst = new byte[0];
-            BigInteger secretKey = BBS.KeyGen(key_material,key_info,key_dst);
-            System.out.println("Secret Key:    " + secretKey);
-            byte[] publicKey = BBS.SkToPk(secretKey);
-            System.out.println("Public Key:    " + Arrays.toString(publicKey)); // as hex
+            OctetString key_material = new OctetString(new byte[256]);
+            OctetString key_info = new OctetString(new byte[0]);
+            OctetString key_dst = new OctetString(new byte[0]);
+            Scalar secretKey = BBS.KeyGen(key_material,key_info,key_dst);
+            System.out.println("Secret Key:    " + secretKey.toString());
+            OctetString publicKey = BBS.SkToPk(secretKey);
+            System.out.println("Public Key:    " + publicKey.toString()); // as hex
 
             // Generate and validate the Signature
-            byte[][] messages = new byte[][]{("Hello").getBytes(), ("BBS").getBytes(), ("test").getBytes()};
-            byte[] header = new byte[0];
-            byte[] ph = new byte[0];
-            byte[] signature = BBS.Sign(secretKey, publicKey, header, messages);
-            System.out.println("Signature:   " + Arrays.toString(signature));
+            OctetString msg1 = OctetString.valueOf("Hello");
+            OctetString msg2 = OctetString.valueOf("BBS");
+            OctetString msg3 = OctetString.valueOf("test");
+            Vector<OctetString> messages = Vector.of(msg1, msg2, msg3);
+            Vector<OctetString> empty = Vector.of();
+
+
+            OctetString header = new OctetString(new byte[0]);
+            OctetString ph = new OctetString(new byte[0]);
+            OctetString signature = BBS.Sign(secretKey, publicKey, header, messages);
+            System.out.println("Signature:   " + signature.toString());
             boolean result = BBS.Verify(publicKey, signature, header, messages);
             System.out.println("Signature is:   " + result);
 
             // Generate and verify the Proof
-            byte[][] disclosedMessages = new byte[][]{("Hello").getBytes(), ("test").getBytes()};
-            int[] disclosed_indexes = new int[]{0,2};
-            // Take out Verify from ProofGen
-            byte[] proof = BBS.ProofGen(publicKey, signature, header, ph, messages, disclosed_indexes); // Must first verify the signature
-            System.out.println("Proof:   " + Arrays.toString(proof));
-            boolean proofValid = BBS.ProofVerify(publicKey, proof, header, ph, disclosedMessages, disclosed_indexes);
+            var disclosed_indexes_test = IntSet.of(1, 3);
+            Vector<OctetString> disclosedMessages = messages.select(disclosed_indexes_test);//Vector.of(msg1, msg3);
+            Vector<Integer> disclosed_indexes = Vector.of(1,2,3);
+            Vector<Integer> disclosed_indexes_empty = Vector.of();
+            OctetString proof = BBS.ProofGen(publicKey, signature, header, ph, messages, disclosed_indexes);
+            System.out.println("Proof:   " + proof.toString());
+            boolean proofValid = BBS.ProofVerify(publicKey, proof, header, ph, messages, disclosed_indexes);
             System.out.println("Proof is:   " + proofValid);
         }catch (Exception e){
             System.out.println(e);

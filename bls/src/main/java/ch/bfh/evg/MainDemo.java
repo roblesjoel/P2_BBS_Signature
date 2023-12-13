@@ -12,7 +12,7 @@ public class MainDemo {
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
 
-        while(true){
+        /*while(true){
             try{
                 System.out.println("Enter your messages, separated by a ;");
                 String inputs = scanner.nextLine();
@@ -65,7 +65,7 @@ public class MainDemo {
             }catch (Exception e) {
                 System.out.println(e);
             }
-        }
+        }*/
         scanner.close();
     }
 }

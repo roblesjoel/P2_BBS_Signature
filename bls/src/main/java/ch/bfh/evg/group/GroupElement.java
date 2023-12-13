@@ -8,8 +8,8 @@ public interface GroupElement {
 
     class DeserializationException extends Exception {
 
-        public DeserializationException(byte[] byteArray, Throwable cause) {
-            super("Bad input: " + byteArray + " (" + byteArray.length + ")", cause);
+        public DeserializationException(ByteArray byteArray, Throwable cause) {
+            super("Bad input: " + byteArray + " (" + byteArray.getLength() + ")", cause);
         }
     }
 
