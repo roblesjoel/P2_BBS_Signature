@@ -30,9 +30,6 @@ import org.bouncycastle.crypto.digests.SHAKEDigest;
 
 public class BBS extends JNI {
 
-    //TODO
-    //create generator function
-
     /**
      * Definitions
      */
@@ -62,7 +59,7 @@ public class BBS extends JNI {
         OctetString api_id = CIPHERSUITE_ID.concat("H2G_HM2S_", StandardCharsets.US_ASCII);
         try{
             Vector<Scalar> message_scalars = messages_to_scalars(messages, api_id);
-            Vector<G1Point> generators = createGenerators(message_scalars.getLength()+1);//create_generators(message_scalars.lenght()+1, publicKey, api_id);
+            Vector<G1Point> generators = create_generators(message_scalars.getLength()+1, publicKey, api_id);
             OctetString signature = CoreSign(secretKey, publicKey, generators, header, message_scalars, G1Point.GENERATOR, api_id);
             return signature;
         }catch (Exception e) {
@@ -84,7 +81,7 @@ public class BBS extends JNI {
         OctetString api_id = CIPHERSUITE_ID.concat("H2G_HM2S_", StandardCharsets.US_ASCII);
         try{
             Vector<Scalar> message_scalars = messages_to_scalars(messages, api_id);
-            Vector<G1Point> generators = createGenerators(message_scalars.getLength()+1);//create_generators(message_scalars.lenght()+1, publicKey, api_id);
+            Vector<G1Point> generators = create_generators(message_scalars.getLength()+1, publicKey, api_id);
             boolean result = CoreVerify(publicKey, signature, generators, header, message_scalars, api_id);
             return result;
         }catch (Exception e){
@@ -274,33 +271,27 @@ public class BBS extends JNI {
         return octect_result;
     }
 
-    // Try to implement it myself
-    /*private static void create_generators(int count, byte[] seed, byte[] api_id) throws AbortException{
-        if(count > Math.pow(2, 64) -1) throw new AbortException("Count is to high. To many messages");
-        byte[] seedAsByte = ("SIG_GENERATOR_SEED_").getBytes();
-        byte[] generatorAsByte = ("SIG_GENERATOR_DST_").getBytes();
-        byte[] generatorSeedAsByte = ("MESSAGE_GENERATOR_SEED").getBytes();
-
-        byte[] seed_dst = new byte[api_id.length + seedAsByte.length];
-        byte[] generator_dst = new byte[api_id.length + generatorAsByte.length];
-        byte[] generator_seed = new byte[api_id.length + generatorSeedAsByte.length];
-
-        System.arraycopy(api_id, 0, seed_dst, 0, api_id.length);
-        System.arraycopy(seedAsByte, 0, seed_dst, api_id.length, seedAsByte.length);
-        System.arraycopy(api_id, 0, generator_dst, 0, api_id.length);
-        System.arraycopy(generatorAsByte, 0, generator_dst, api_id.length, generatorAsByte.length);
-        System.arraycopy(api_id, 0, generator_seed, 0, api_id.length);
-        System.arraycopy(generatorSeedAsByte, 0, generator_seed, api_id.length, generatorSeedAsByte.length);
-
-        String v = expand_message_xof(Arrays.toString(generator_seed), Arrays.toString(seed_dst), Expand_Len);
-
-        for (int i = 0; i < count; i++) {
-            v = expand_message_xof(v+ Arrays.toString(i2osp(BigInteger.valueOf(i), 8)), Arrays.toString(seed_dst), Expand_Len);
-            var generator_i = hash_to_curve_g1(v, generator_dst);
-            hash_an
+    /**
+     * Generate a number of generators on G1
+     * @param count How many to generate
+     * @param seed The seed to generate from
+     * @param api_id The api id
+     * @return A Vector of the generated generators
+     * @throws AbortException Throws this exception if there is an error while genratting
+     */
+    public static Vector<G1Point> create_generators(int count, OctetString seed, OctetString api_id) throws AbortException{
+        OctetString seed_dst = api_id.concat("SIG_GENERATOR_SEED_", StandardCharsets.US_ASCII);
+        OctetString generator_dst = api_id.concat("SIG_GENERATOR_DST_", StandardCharsets.US_ASCII);
+        OctetString generator_seed = api_id.concat("MESSAGE_GENERATOR_SEED", StandardCharsets.US_ASCII);
+        if(count > Math.pow(2, 64) -1) throw new AbortException("Count is to high. To many generators");
+        OctetString v = expand_message_xof(generator_seed, seed_dst, Expand_Len);
+        Vector.Builder<G1Point> builder = new Vector.Builder<>();
+        for (int i = 1; i <= count; i++) {
+            v = expand_message_xof(v.concat(i2osp(Scalar.of(BigInteger.valueOf(i)), 8)), seed_dst, Expand_Len);
+            builder.addValue(G1Point.hashAndMap(v.toBytes()));
         }
-
-    }*/
+        return builder.build();
+    }
 
     /**
      * Map messages to scalars
@@ -454,7 +445,7 @@ public class BBS extends JNI {
             int U = (int) Math.floor((proof.length-proof_len_floor)/Octet_Scalar_Length.toInt());
             int R = disclosed_indexes.getLength();
             Vector<Scalar> messageScalars = messages_to_scalars(disclosed_messages, api_id);
-            Vector<G1Point> generators = createGenerators(U+R+1);//create_generators(message_scalars.lenght()+1, publicKey, api_id);
+            Vector<G1Point> generators = create_generators(U+R+1, publicKey, api_id);
             boolean result = CoreProofVerify(publicKey, proof, generators, header, ph, messageScalars, disclosed_indexes, api_id);
             return result;
         }catch (Exception e){
@@ -622,7 +613,7 @@ public class BBS extends JNI {
         try{
             OctetString api_id = CIPHERSUITE_ID.concat("H2G_HM2S_", StandardCharsets.US_ASCII);
             Vector<Scalar> message_scalars = messages_to_scalars(messages, api_id);
-            Vector<G1Point> generators = createGenerators(message_scalars.getLength()+1);//create_generators(message_scalars.lenght()+1, publicKey, api_id);
+            Vector<G1Point> generators = create_generators(message_scalars.getLength()+1, publicKey, api_id);
             OctetString proof = CoreProofGen(publicKey, signature, generators, header, ph, message_scalars, disclosed_indexes, api_id);
             return proof;
         }catch (Exception e) {
@@ -788,20 +779,6 @@ public class BBS extends JNI {
         for (int i = 0; i < count; i++) {
             builder.addValue(Scalar.of(os2ip(randomBytes(Expand_Len)).toBigInteger().mod(r)));
         }
-        return builder.build();
-    }
-
-    /**
-     * Create a number of random generators
-     * @param count How many generators to create
-     * @return T Vector of the generated generators
-     */
-    public static Vector<G1Point> createGenerators(int count) {
-        var builder = new Vector.Builder<G1Point>();
-        IntStream.rangeClosed(1, count)
-                .mapToObj(i -> "Generator-" + i)
-                .map(G1Point::hashAndMap)
-                .forEach(builder::addValue);
         return builder.build();
     }
 

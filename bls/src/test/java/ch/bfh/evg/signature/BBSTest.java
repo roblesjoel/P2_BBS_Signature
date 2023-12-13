@@ -126,7 +126,7 @@ class BBSTest {
         var otherH9 = OctetString.valueOf("ac00b493f92d17837a28d1f5b07991ca5ab9f370ae40d4f9b9f2711749ca200110ce6517dc28400d4ea25dddc146cacc", Charset.defaultCharset());
         var otherH10 = OctetString.valueOf("965a6c62451d4be6cb175dec39727dc665762673ee42bf0ac13a37a74784fbd61e84e0915277a6f59863b2bb4f5f6005", Charset.defaultCharset());
         Vector<OctetString> otherGenerators = Vector.of(otherQ1, otherH1, otherH2, otherH3, otherH4, otherH5, otherH6, otherH7, otherH8, otherH9,otherH10);
-        Vector<G1Point> generators = createGenerators(11);
+        Vector<G1Point> generators = create_generators(11);
         for (int i = 1; i < 11; i++){
             Assertions.assertEquals(otherGenerators.getValue(i).toString(), generators.getValue(i).toString());
         }
