@@ -1,10 +1,13 @@
 package ch.bfh.evg.signature;
 
 import ch.bfh.evg.bls12_381.Scalar;
+import ch.bfh.evg.group.GroupElement;
+import ch.openchvote.util.sequence.ByteArray;
 
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.util.HexFormat;
 
 public class OctetString {
 
@@ -50,12 +53,26 @@ public class OctetString {
     }
 
     public static OctetString valueOf(int value){
-        //return OctetString.valueOf(String.valueOf(value), StandardCharsets.UTF_16);
         return new OctetString(ByteBuffer.allocate(4).putInt(value).array());
+    }
+
+    public OctetString reverse(){
+        byte[] b = new byte[length];
+        int j = length;
+        for (int i = 0; i < length; i++) {
+            b[j - 1] = octetString[i];
+            j = j - 1;
+        }
+        return new OctetString(b);
     }
 
     public static OctetString valueOf(Scalar value){
         return OctetString.valueOf(value.toString(), StandardCharsets.UTF_16);
+    }
+
+    public static OctetString valueOfHexString(String str){
+        var temp = HexFormat.of().parseHex(str);
+        return new OctetString(temp);
     }
 
     public OctetString split(int start, int end){
@@ -67,6 +84,12 @@ public class OctetString {
 
     public int toInt(){
         return ByteBuffer.wrap(octetString).getInt();
+    }
+
+
+
+    public Scalar toScalar() throws GroupElement.DeserializationException {
+        return Scalar.deserialize(ByteArray.of(octetString));
     }
 
     @Override

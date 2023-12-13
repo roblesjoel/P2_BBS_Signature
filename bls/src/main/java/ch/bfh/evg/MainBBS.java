@@ -25,6 +25,7 @@ public class MainBBS {
         // Output as Hex
         // Ziel ist Aktueller Draft, 1 zu 1 umgesezt
         // Logisch gesehen, Test bestehen
+        // Mod funktion in scalar
 
         try{
             // Generate the keys

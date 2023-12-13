@@ -36,7 +36,7 @@ public class BBS extends JNI {
     /**
      * Definitions
      */
-    public static final OctetString CIPHERSUITE_ID = OctetString.valueOf("BBS_BLS12381G1_XOF:SHAKE-256_SSWU_RO_H2G_HM2S_"); // Ciphersuite ID,BLS12-381-SHAKE-256
+    public static final OctetString CIPHERSUITE_ID = OctetString.valueOf("BBS_BLS12381G1_XOF:SHAKE-256_SSWU_RO_H2G_HM2S_", StandardCharsets.US_ASCII); // Ciphersuite ID,BLS12-381-SHAKE-256
     private static final G1Point P1 = G1Point.GENERATOR; // Generator point in G1
     private static final G2Point P2 = G2Point.GENERATOR; // Generator point in G2
     private static final SecureRandom SECURE_RANDOM = new SecureRandom(); // Random generator method
@@ -175,7 +175,7 @@ public class BBS extends JNI {
         OctetString comm = OctetString.valueOf("");
         if(commitment != G1Point.ZERO) comm = serialize(new Object[]{commitment});
         Scalar e = hash_to_scalar(serialize(prepareSignSerializationData(secretKey, domain, messages, comm)), signature_dst);
-        G1Point B = P1.add(Q1.times(domain).add(G1Point.sumOfScalarMultiply(H_x, messages)));
+        G1Point B = G1Point.GENERATOR.add(Q1.times(domain).add(G1Point.sumOfScalarMultiply(H_x, messages)));
         var A = B.times(Scalar.of(secretKey.add(e).toBigInteger().modInverse(r)));
         return signature_to_octets(new Signature(A, e));
     }
@@ -309,7 +309,7 @@ public class BBS extends JNI {
      * @return Returns the mapped messages as scalar
      * @throws AbortException Throws exception if there are to many messages
      */
-    private static Vector<Scalar> messages_to_scalars(Vector<OctetString> messages, OctetString api_id) throws AbortException{
+    public static Vector<Scalar> messages_to_scalars(Vector<OctetString> messages, OctetString api_id) throws AbortException{
         OctetString map_dst = api_id.concat(OctetString.valueOf("MAP_MSG_TO_SCALAR_AS_HASH_", StandardCharsets.US_ASCII));
         if(messages.getLength() > Math.pow(2,64) -1) throw new AbortException("To many messages!");
         var builder = new Vector.Builder<Scalar>();
@@ -326,7 +326,7 @@ public class BBS extends JNI {
      * @return The public key as octets
      */
     public static OctetString SkToPk(Scalar secretKey){
-        G2Point W = P2.times(secretKey);
+        G2Point W = G2Point.GENERATOR.times(secretKey);
         return new OctetString(W.serialize().toByteArray());
     }
 
@@ -338,7 +338,7 @@ public class BBS extends JNI {
      */
     public static Scalar KeyGen(OctetString key_material, OctetString key_info, OctetString key_dst) throws InvalidException {
         try {
-            if(key_dst.length == 0) key_dst = CIPHERSUITE_ID.concat("KEYGEN_DST");
+            if(key_dst.length == 0) key_dst = CIPHERSUITE_ID.concat("KEYGEN_DST_", StandardCharsets.US_ASCII);
             if(key_material.length < 32) throw new InvalidException("key_material is to short");
             if(key_info.length > 65535) throw new InvalidException("key_info is to long");
             OctetString derive_input = key_material.concat(i2osp(Scalar.of(BigInteger.valueOf(key_info.length)), 2)).concat(key_info);
@@ -356,7 +356,7 @@ public class BBS extends JNI {
      * @param size The Size of the octet
      * @return The converted BigInt
      */
-    private static OctetString i2osp(Scalar i, int size) {
+    public static OctetString i2osp(Scalar i, int size) {
         if (size < 1) {
             throw new IllegalArgumentException("Size of the octet string should be at least 1 but is " + size);
         }
@@ -381,8 +381,8 @@ public class BBS extends JNI {
      * @param data the octets to be converted
      * @return The converted data
      */
-    private static Scalar os2ip(OctetString data) {
-        return Scalar.of(new BigInteger(1, data.toBytes()).mod(r));
+    public static Scalar os2ip(OctetString data) {
+        return Scalar.of(new BigInteger(data.toBytes()).mod(r));
     }
 
     /**
@@ -392,7 +392,7 @@ public class BBS extends JNI {
      * @return The hashed message as a scalar
      * @throws AbortException Throws an exception id the dst is too long
      */
-    private static Scalar hash_to_scalar(OctetString msg_octets, OctetString dst) throws AbortException{
+    public static Scalar hash_to_scalar(OctetString msg_octets, OctetString dst) throws AbortException{
         if(dst.length > 255) throw new AbortException("dst is to long");
         var uniform_bytes = expand_message_xof(msg_octets, dst, Expand_Len);
         return Scalar.of(os2ip(uniform_bytes).toBigInteger().mod(r));
@@ -407,7 +407,7 @@ public class BBS extends JNI {
      * @throws AbortException Throws an exception if len_in_bytes or DST are too big
      * as defined in https://datatracker.ietf.org/doc/html/rfc9380#name-expand_message_xof
      */
-    private static OctetString expand_message_xof(OctetString msg, OctetString dst, int len_in_bytes) throws AbortException {
+    public static OctetString expand_message_xof(OctetString msg, OctetString dst, int len_in_bytes) throws AbortException {
         if(len_in_bytes > 65535 || dst.length > 255) throw new AbortException("Either len_in_bytes or DST is to big");
         OctetString serializedDstLenght = i2osp(Scalar.of(BigInteger.valueOf(dst.length)),1);
         OctetString dstPrime = dst.concat(serializedDstLenght);
@@ -423,10 +423,10 @@ public class BBS extends JNI {
      * @return The hashed data
      */
     public static OctetString shakeDigest(OctetString data, int returnLength){
-        SHAKEDigest digest = new SHAKEDigest(256);
-        byte[] hashBytes = new byte[data.length];
+        SHAKEDigest digest = new SHAKEDigest();
+        byte[] hashBytes = new byte[Math.max(data.length, 32)];
         digest.update(data.toBytes(), 0, data.length);
-        digest.doFinal(hashBytes, 0);
+        digest.doOutput(hashBytes, 0, hashBytes.length);
         digest.reset();
         return new OctetString(Arrays.copyOf(hashBytes, returnLength));
     }
@@ -796,7 +796,7 @@ public class BBS extends JNI {
      * @param count How many generators to create
      * @return T Vector of the generated generators
      */
-    private static Vector<G1Point> createGenerators(int count) {
+    public static Vector<G1Point> createGenerators(int count) {
         var builder = new Vector.Builder<G1Point>();
         IntStream.rangeClosed(1, count)
                 .mapToObj(i -> "Generator-" + i)
