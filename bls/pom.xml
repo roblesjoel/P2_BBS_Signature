@@ -33,6 +33,11 @@
             <artifactId>bcprov-jdk18on</artifactId>
             <version>1.77</version>
         </dependency>
+        <dependency>
+            <groupId>ch.bfh.hnr1</groupId>
+            <artifactId>BLS12-381</artifactId>
+            <version>1.0.0</version>
+        </dependency>
     </dependencies>
 
     <build>
