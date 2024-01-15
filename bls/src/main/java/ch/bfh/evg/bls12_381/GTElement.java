@@ -1,7 +1,6 @@
 package ch.bfh.evg.bls12_381;
 
 import ch.bfh.evg.group.MultiplicativeElement;
-import ch.bfh.evg.jni.JNI;
 import ch.openchvote.util.sequence.ByteArray;
 import com.herumi.mcl.GT;
 import com.herumi.mcl.Mcl;
@@ -10,7 +9,7 @@ import java.math.BigInteger;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-public class GTElement extends JNI implements MultiplicativeElement<GTElement, Scalar> {
+public class GTElement implements MultiplicativeElement<GTElement, Scalar> {
 
     public static final GTElement GENERATOR = G1Point.GENERATOR.pair(G2Point.GENERATOR);
     public static final GTElement ONE = GENERATOR.divide(GENERATOR);

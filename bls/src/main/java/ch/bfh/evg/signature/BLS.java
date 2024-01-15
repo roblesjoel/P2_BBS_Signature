@@ -3,8 +3,6 @@ package ch.bfh.evg.signature;
 import ch.bfh.evg.bls12_381.Scalar;
 import ch.bfh.evg.bls12_381.G1Point;
 import ch.bfh.evg.bls12_381.G2Point;
-import ch.bfh.evg.jni.JNI;
-
 import java.util.Arrays;
 import java.util.List;
 
@@ -19,7 +17,7 @@ import java.util.List;
  *
  * Source: page 17 of https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-pairing-friendly-curves-02
  */
-public class BLS extends JNI {
+public class BLS {
 
     public static KeyPair<Scalar, G2Point> generateKeyPair() {
         var sk = Scalar.getRandom();

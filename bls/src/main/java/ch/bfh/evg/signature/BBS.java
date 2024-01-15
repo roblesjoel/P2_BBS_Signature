@@ -12,23 +12,20 @@ import ch.bfh.evg.bls12_381.G1Point;
 import ch.bfh.evg.bls12_381.G2Point;
 import ch.bfh.evg.bls12_381.GTElement;
 import ch.bfh.evg.group.GroupElement;
-import ch.bfh.evg.jni.JNI;
 import ch.bfh.evg.proof.InitRes;
 import ch.bfh.evg.proof.Proof;
 import ch.openchvote.util.sequence.ByteArray;
 import ch.openchvote.util.sequence.Vector;
 
-import java.lang.reflect.Array;
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.stream.IntStream;
 
 import org.bouncycastle.crypto.digests.SHAKEDigest;
 
-public class BBS extends JNI {
+public class BBS {
 
     /**
      * Definitions
