@@ -16,7 +16,7 @@ public class KeyGen {
         if(key_dst.length == 0) key_dst = CIPHERSUITE_ID.concat("KEYGEN_DST_", StandardCharsets.US_ASCII);
         if(key_material.length < 32) return Scalar.INVALID;
         if(key_info.length > 65535) return Scalar.INVALID;
-        OctetString derive_input = key_material.concat(i2osp(Scalar.of(BigInteger.valueOf(key_info.length)), 2)).concat(key_info);
+        var derive_input = key_material.concat(i2osp(Scalar.of(BigInteger.valueOf(key_info.length)), 2)).concat(key_info);
         return hash_to_scalar(derive_input, key_dst);
     }
 

@@ -55,4 +55,8 @@ public class G1Point{
     public boolean isZero(){
         return G1.isZero(point);
     }
+    @Override
+    public String toString(){
+        return this.point.toString();
+    }
 }

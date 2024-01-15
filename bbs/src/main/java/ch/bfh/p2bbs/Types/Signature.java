@@ -1,17 +1,24 @@
 package ch.bfh.p2bbs.Types;
 
-import ch.bfh.hnr1.element.ECPoint;
-import ch.bfh.hnr1.element.FpElement;
-import ch.bfh.hnr1.field.Fp;
-
 public class Signature {
+
+    public static Signature INVALID = new Signature();
 
     private final G1Point A;
     private final Scalar e;
 
+    private Signature(){
+        this.A = null;
+        this.e = null;
+    }
+
     public Signature(G1Point A, Scalar e) {
         this.A = A;
         this.e = e;
+    }
+
+    public boolean isInvalid(){
+        return A == null || e == null;
     }
 
     public G1Point getPoint(){

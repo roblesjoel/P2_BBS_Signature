@@ -7,7 +7,7 @@ import java.util.HexFormat;
 
 public class OctetString {
 
-    public static OctetString INVALID = null;
+    public static OctetString INVALID = new OctetString(-1);
     private final byte[] octetString;
     public final int length;
 
@@ -19,6 +19,11 @@ public class OctetString {
     public OctetString(byte[] octetString){
         this.octetString = octetString;
         length = octetString.length;
+    }
+
+    private OctetString(int length){
+        this.octetString = null;
+        this.length = length;
     }
 
     public byte[] toBytes(){
@@ -85,6 +90,7 @@ public class OctetString {
 
     @Override
     public String toString() {
+        if(isInvalid()) return "Invalid";
         return bytesToHex(octetString);
     }
 
@@ -97,5 +103,9 @@ public class OctetString {
             hexChars[j * 2 + 1] = HEX_ARRAY[v & 0x0F];
         }
         return new String(hexChars, StandardCharsets.UTF_8);
+    }
+
+    public boolean isInvalid(){
+        return this.length == -1;
     }
 }

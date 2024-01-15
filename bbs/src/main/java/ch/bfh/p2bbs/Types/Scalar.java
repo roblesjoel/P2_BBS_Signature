@@ -4,8 +4,7 @@ import java.math.BigInteger;
 import java.util.Objects;
 
 public class Scalar {
-    public static Scalar INVALID = null;
-    public static Scalar ABORT;
+    public static Scalar INVALID = new Scalar();
 
     public final BigInteger value;
 
@@ -13,8 +12,8 @@ public class Scalar {
         this.value = value;
     }
 
-    public boolean isInvalid(){
-        return value == null;
+    private Scalar(){
+        this.value = null;
     }
 
     public static Scalar of(BigInteger value) {
@@ -50,7 +49,7 @@ public class Scalar {
     }
 
     public Scalar modInverse(BigInteger other){
-        return new Scalar(value.modInverse(value));
+        return new Scalar(value.modInverse(other));
     }
 
     public boolean isZero(){
@@ -71,5 +70,21 @@ public class Scalar {
 
     public boolean biggerOrSameThan(BigInteger other){
         return value.compareTo(other) >= 0;
+    }
+
+    public boolean isInvalid(){
+        return this.value == null;
+    }
+
+    public Scalar power(int exponent){
+        return new Scalar(this.value.pow(exponent));
+    }
+    public Scalar substract(Scalar other){
+        return new Scalar(this.value.subtract(other.value));
+    }
+
+    @Override
+    public String toString() {
+        return this.value.toString(16);
     }
 }

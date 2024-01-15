@@ -11,6 +11,8 @@ import static ch.bfh.p2bbs.utils.Definitions.G2;
 
 public class G2Point {
 
+    private final static G2Point INVALID = new G2Point();
+
     private final ECPoint<Fp2Element, Fp2> point;
     public static final G2Point GENERATOR = new G2Point((ECPoint<Fp2Element, Fp2>) G2.getGenerator());
 
@@ -18,12 +20,16 @@ public class G2Point {
         this.point = point;
     }
 
+    private G2Point(){
+        this.point = null;
+    }
+
     public ECPoint<Fp2Element, Fp2> getPoint(){
         return point;
     }
 
     public byte[] serialize(){
-        return new byte[0];
+        return G2.serialize(this.point);
     }
 
     public static G2Point deserialize(byte[] serializedPoint){
@@ -44,5 +50,14 @@ public class G2Point {
 
     public G2Point negate(){
         return new G2Point(G2.negate(this.point));
+    }
+
+    @Override
+    public String toString(){
+        return this.point.toString();
+    }
+
+    public boolean isInvalid(){
+        return this.point == null;
     }
 }
