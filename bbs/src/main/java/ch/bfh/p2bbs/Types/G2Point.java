@@ -9,22 +9,22 @@ import ch.bfh.hnr1.field.Fp2;
 import static ch.bfh.p2bbs.utils.Definitions.G1;
 import static ch.bfh.p2bbs.utils.Definitions.G2;
 
-public class G2Point {
+public class G2Point extends ECPoint<Fp2Element, Fp2> {
 
-    private final static G2Point INVALID = new G2Point();
+    private final ch.bfh.hnr1.element.G2Point point;
+    public static final G2Point GENERATOR = new G2Point((ECPoint<Fp2Element, Fp2>) G2.getGenerator(), (Fp2) G2.getField());
 
-    private final ECPoint<Fp2Element, Fp2> point;
-    public static final G2Point GENERATOR = new G2Point((ECPoint<Fp2Element, Fp2>) G2.getGenerator());
-
-    public G2Point(ECPoint<Fp2Element, Fp2> point){
-        this.point = point;
+    public G2Point(ECPoint<Fp2Element, Fp2> point, Fp2 field){
+        super(field, point.get_X(), point.get_Y(), point.get_Z());
+        this.point = (ch.bfh.hnr1.element.G2Point) point;
     }
 
-    private G2Point(){
-        this.point = null;
+    private G2Point(ECPoint<Fp2Element, Fp2> point){
+        super((Fp2) G2.getField(), point.get_X(), point.get_Y(), point.get_Z());
+        this.point = (ch.bfh.hnr1.element.G2Point) point;
     }
 
-    public ECPoint<Fp2Element, Fp2> getPoint(){
+    public ch.bfh.hnr1.element.G2Point getPoint(){
         return point;
     }
 
@@ -33,7 +33,8 @@ public class G2Point {
     }
 
     public static G2Point deserialize(byte[] serializedPoint){
-        return GENERATOR;
+        var temp = G2.deserialize(serializedPoint);
+        return new G2Point(temp);
     }
 
     public static G2Point hash_to_curve_g2(byte[] msg){

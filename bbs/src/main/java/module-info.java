@@ -5,5 +5,5 @@ module bbs {
     exports ch.bfh.p2bbs.key;
     requires ch.openchvote.utilities;
     requires org.bouncycastle.provider;
-    requires BLS;
+    requires ch.bfh.evg.bls;
 }

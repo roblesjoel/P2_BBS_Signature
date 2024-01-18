@@ -3,16 +3,18 @@ package ch.bfh.p2bbs.Types;
 import ch.openchvote.util.sequence.Vector;
 import ch.openchvote.util.tuples.Octuple;
 
+import java.math.BigInteger;
+
 public class Proof extends Octuple<G1Point, G1Point, G1Point, Scalar, Scalar, Scalar, Vector<Scalar>, Scalar> {
 
-    public static Proof INVALID = new Proof();
+    public static Proof INVALID = new Proof(new Vector.Builder<Scalar>(1).addValue(Scalar.of(BigInteger.ZERO)).build());
 
     public Proof(G1Point abar, G1Point bbar, G1Point d, Scalar ecalc, Scalar r1calc, Scalar r3calc, Vector<Scalar> msgCommitments, Scalar challange) {
         super(abar, bbar, d, ecalc, r1calc, r3calc, msgCommitments, challange);
     }
 
-    private Proof(){
-        super(null, null, null, null, null, null, null, null);
+    private Proof(Vector<Scalar> scalars){
+        super(new G1Point(), new G1Point(), new G1Point(), new Scalar(), new Scalar(), new Scalar(), scalars, new Scalar());
     }
 
     public G1Point getAbar() {
@@ -63,6 +65,6 @@ public class Proof extends Octuple<G1Point, G1Point, G1Point, Scalar, Scalar, Sc
     }
 
     public boolean isInvalid(){
-        return getAbar() == null || getBbar() == null || getD() == null || getECalc() == null || getR1Calc() == null || getR3Calc() == null || getMsg_commitments() == null || getChallenge() == null;
+        return getAbar().isInvalid() || getBbar().isInvalid() || getD().isInvalid() || getECalc().isInvalid() || getR1Calc().isInvalid() || getR3Calc().isInvalid() || getChallenge().isInvalid();
     }
 }

@@ -1,8 +1,9 @@
 package ch.bfh.p2bbs.Types;
 
+import ch.bfh.hnr1.element.ECPoint;
 import ch.bfh.hnr1.element.Fp12Element;
+import ch.bfh.hnr1.field.Fp12;
 
-import static ch.bfh.p2bbs.utils.Definitions.G1;
 import static ch.bfh.p2bbs.utils.Definitions.GT;
 
 public class GTElement {
@@ -22,5 +23,9 @@ public class GTElement {
 
     public GTElement multiply(GTElement other){
         return new GTElement(GT.multiply(this.point, other.point));
+    }
+
+    public boolean equals(GTElement other) {
+        return this.point.getFirst().equals(other.point.getFirst()) && this.point.getSecond().equals(other.point.getSecond());
     }
 }

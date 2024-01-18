@@ -34,7 +34,7 @@
         <dependency>
             <groupId>ch.bfh.hnr1</groupId>
             <artifactId>BLS12-381</artifactId>
-            <version>1.0.1</version>
+            <version>1.0.3</version>
         </dependency>
     </dependencies>
 

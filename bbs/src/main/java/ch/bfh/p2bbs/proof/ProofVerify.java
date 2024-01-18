@@ -12,7 +12,7 @@ public class ProofVerify {
     // see: https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-bbs-signatures-05#name-proof-verification-proofver
     public static boolean ProofVerify(OctetString publicKey, OctetString proof, OctetString header, OctetString ph, Vector<OctetString> disclosed_messages, Vector<Integer> disclosed_indexes) {
         var api_id =  CIPHERSUITE_ID.concat("H2G_HM2S_", StandardCharsets.US_ASCII);
-        var proof_len_floor = (2 * Octet_Point_Length.toInt()) + (3 * Octet_Scalar_Length.toInt());
+        var proof_len_floor = (3 * Octet_Point_Length.toInt()) + (4 * Octet_Scalar_Length.toInt());
         if(proof.length < proof_len_floor) return false;
         var U = (int) Math.floor((proof.length-proof_len_floor)/Octet_Scalar_Length.toInt());
         var R = disclosed_indexes.getLength();
@@ -54,7 +54,9 @@ public class ProofVerify {
         var L = U + R;
         var ix = disclosed_indexes;
         for (var el: disclosed_indexes) {
-            if(el < 0 || el > (L-1)) return InitRes.INVALID;
+            //if(el < 0 || el > (L-1)) return InitRes.INVALID;
+            // change reason, vector starts with 1 and not 0
+            if(el < 1 || el > (L)) return InitRes.INVALID;
         }
         var jx = splitIndexes(disclosed_indexes, L, U);
         if(disclosed_messages.getLength() != R) return InitRes.INVALID;

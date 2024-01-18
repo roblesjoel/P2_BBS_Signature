@@ -2,7 +2,6 @@ package ch.bfh.p2bbs.utils;
 
 import ch.bfh.p2bbs.Types.*;
 import ch.bfh.p2bbs.excptions.Abort;
-import ch.bfh.p2bbs.signature.Sign;
 import ch.openchvote.util.sequence.Vector;
 import org.bouncycastle.crypto.digests.SHAKEDigest;
 
@@ -11,7 +10,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 
-import static ch.bfh.hnr1.hash.HashToField.expandMessageXMD_SHA_256;
+import static ch.bfh.hnr1.util.Hash.expandMessageXMD_SHA_256;
 import static ch.bfh.p2bbs.utils.Definitions.*;
 
 public class helper {

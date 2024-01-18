@@ -12,7 +12,7 @@ public class Scalar {
         this.value = value;
     }
 
-    private Scalar(){
+    public Scalar(){
         this.value = null;
     }
 
@@ -36,16 +36,8 @@ public class Scalar {
         return Scalar.of(value.mod(modVal));
     }
 
-    public BigInteger toBigInt(){
-        return value;
-    }
-
     public Scalar add(Scalar other){
         return new Scalar(value.add(other.value));
-    }
-
-    public Scalar modInverse(Scalar other){
-        return new Scalar(value.modInverse(other.value));
     }
 
     public Scalar modInverse(BigInteger other){
@@ -86,5 +78,9 @@ public class Scalar {
     @Override
     public String toString() {
         return this.value.toString(16);
+    }
+
+    public boolean equals(Scalar other){
+        return this.value.equals(other.value);
     }
 }

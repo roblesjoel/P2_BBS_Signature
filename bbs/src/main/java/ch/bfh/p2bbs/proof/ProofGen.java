@@ -28,7 +28,9 @@ public class ProofGen {
         if(R > L) return OctetString.INVALID;
         var U = L-R;
         for (var el: disclosed_indexes) {
-            if(el < 0 || el > (L-1)) return OctetString.INVALID;
+            //if(el < 0 || el > (L-1)) return OctetString.INVALID;
+            // change reason, vector starts with 1 and not 0
+            if(el < 1 || el > (L)) return OctetString.INVALID;
         }
         var undisclosed_indexes = splitIndexes(disclosed_indexes, L, U);
         var ix = disclosed_indexes;
@@ -88,10 +90,10 @@ public class ProofGen {
         var Abar = init_res.getAbar();
         var Bbar = init_res.getBbar();
         var D = init_res.getD();
-        var r3 = r2.power(-1).mod(r);
-        var eCalc= e_.add(e_value.multiply(challenge));
-        var r1Calc = r1_.substract(r1.multiply(challenge));
-        var r3Calc = r3_.substract(r3.multiply(challenge));
+        var r3 = r2.modInverse(r);
+        var eCalc= e_.add(e_value.multiply(challenge)).mod(r);
+        var r1Calc = r1_.substract(r1.multiply(challenge)).mod(r);
+        var r3Calc = r3_.substract(r3.multiply(challenge)).mod(r);
         var builder = new Vector.Builder<Scalar>(U);
         for (int j = 1; j <= U; j++) {
             builder.addValue(m_jx.getValue(j).add(undisclosed_x.getValue(j).multiply(challenge)).mod(r));

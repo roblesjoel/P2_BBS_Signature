@@ -6,14 +6,17 @@ import ch.openchvote.util.tuples.Sextuple;
 
 public class InitRes extends Sextuple<G1Point, G1Point, G1Point, G1Point, G1Point, Scalar> {
 
-    public static InitRes INVALID = new InitRes();
+    public static InitRes INVALID = new InitRes(true);
+    private final boolean invalid;
 
     public InitRes(G1Point abar, G1Point bbar, G1Point d, G1Point t1, G1Point t2, Scalar domain) {
         super(abar, bbar, d, t1, t2, domain);
+        invalid = false;
     }
 
-    private InitRes(){
-        super(null, null, null, null, null, null);
+    private InitRes(boolean invalid){
+        super(new G1Point(), new G1Point(), new G1Point(), new G1Point(), new G1Point(), new Scalar());
+        this.invalid = invalid;
     }
 
     public G1Point getAbar() {
@@ -41,6 +44,6 @@ public class InitRes extends Sextuple<G1Point, G1Point, G1Point, G1Point, G1Poin
     }
 
     public boolean isInvalid(){
-        return getAbar() == null || getBbar() == null || getD() == null || getT1() == null || getT2() == null || getDomain() == null;
+        return this.invalid;
     }
 }

@@ -1,13 +1,11 @@
 package ch.bfh.p2bbs.signature;
 
 import ch.bfh.p2bbs.Types.*;
-import ch.openchvote.util.sequence.ByteArray;
 import ch.openchvote.util.sequence.Vector;
 
 import java.nio.charset.StandardCharsets;
 
-import static ch.bfh.p2bbs.utils.Definitions.CIPHERSUITE_ID;
-import static ch.bfh.p2bbs.utils.Definitions.P1;
+import static ch.bfh.p2bbs.utils.Definitions.*;
 import static ch.bfh.p2bbs.utils.helper.*;
 
 public class SignVerify {

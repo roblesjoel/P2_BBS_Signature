@@ -33,6 +33,7 @@ public class Sign {
         var e = hash_to_scalar(serialize(prepareSignSerializationData(secretKey, domain, messages)), signature_dst);
         var B = P1.add(Q1.times(domain)).add(G1Point.sumOfScalarMultiply(H_x, messages));
         var A = B.times(secretKey.add(e).modInverse(r));
+        var test = new Signature(A, e);
         return signature_to_octets(new Signature(A, e));
     }
 
