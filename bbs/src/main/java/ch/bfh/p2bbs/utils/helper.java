@@ -70,7 +70,7 @@ public class helper {
         var builder = new Vector.Builder<G1Point>();
         for (int i = 1; i <= count; i++) {
             v = new OctetString(expandMessageXMD_SHA_256(v.concat(i2osp(Scalar.of(BigInteger.valueOf(i)), 8)).toBytes(), seed_dst.toBytes(), Expand_Len));
-            builder.addValue(G1Point.hash_to_curve_g1(v.toBytes()));
+            builder.addValue(G1Point.hash_to_curve_g1(v.toBytes(), generator_dst));
         }
         return builder.build();
     }

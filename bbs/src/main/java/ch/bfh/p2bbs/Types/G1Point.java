@@ -16,7 +16,7 @@ public class G1Point extends ECPoint<FpElement, Fp> {
         this.point = (ch.bfh.hnr1.element.G1Point) point;
     }
 
-    private G1Point(ECPoint<FpElement, Fp> point){
+    public G1Point(ECPoint<FpElement, Fp> point){
         super((Fp) G1.getField(), point.get_X(), point.get_Y(), point.get_Z());
         this.point = (ch.bfh.hnr1.element.G1Point) point;
     }
@@ -34,8 +34,8 @@ public class G1Point extends ECPoint<FpElement, Fp> {
         return new G1Point(G1.deserialize(serializedPoint));
     }
 
-    public static G1Point hash_to_curve_g1(byte[] msg){
-        return new G1Point(G1.hashToCurve(msg));
+    public static G1Point hash_to_curve_g1(byte[] msg, OctetString dst){
+        return new G1Point(G1.hashToCurve(msg, dst.toBytes()));
     }
 
     public G1Point add(G1Point other){

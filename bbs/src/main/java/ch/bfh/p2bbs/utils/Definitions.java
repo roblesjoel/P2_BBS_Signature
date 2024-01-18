@@ -9,7 +9,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
 
 public class Definitions {
-    public static final OctetString CIPHERSUITE_ID = OctetString.valueOf("BBS_BLS12381G1_XOF:SHAKE-256_SSWU_RO_H2G_HM2S_", StandardCharsets.US_ASCII); // Ciphersuite ID,BLS12-381-SHAKE-256
+    public static final OctetString CIPHERSUITE_ID = OctetString.valueOf("BBS_BLS12381G1_XMD:SHA-256_SSWU_RO_", StandardCharsets.US_ASCII); // Ciphersuite ID,BLS12-381-SHAKE-256
     public static final SecureRandom SECURE_RANDOM = new SecureRandom(); // Random generator method
     public static final OctetString Octet_Scalar_Length = OctetString.valueOf(32);
     public static final OctetString Octet_Point_Length = OctetString.valueOf(48);
@@ -19,5 +19,5 @@ public class Definitions {
     public static final BLS.G1 G1 = BLS12381.G1;
     public static final BLS.G2 G2 = BLS12381.G2;
     public static final BLS12.GT GT = BLS12381.GT;
-    public static final G1Point P1 = G1Point.GENERATOR;
+    public static final G1Point P1 = G1Point.deserialize(OctetString.valueOfHexString("a8ce256102840821a3e94ea9025e4662b205762f9776b3a766c872b948f1fd225e7c59698588e70d11406d161b4e28c9").toBytes());
 }
