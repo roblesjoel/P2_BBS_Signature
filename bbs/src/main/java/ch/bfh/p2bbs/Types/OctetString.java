@@ -3,6 +3,7 @@ package ch.bfh.p2bbs.Types;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.HexFormat;
 
 public class OctetString {
@@ -107,5 +108,9 @@ public class OctetString {
 
     public boolean isInvalid(){
         return this.length == -1;
+    }
+
+    public boolean equals(OctetString other){
+        return this.octetString.length == other.length && Arrays.equals(this.octetString, other.octetString);
     }
 }

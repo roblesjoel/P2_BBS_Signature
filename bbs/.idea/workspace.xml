@@ -5,26 +5,21 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="01f2069e-28ec-457e-9a58-088c57d48379" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/.gitignore" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/pom.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/ch/bfh/p2bbs/MainBBS.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/ch/bfh/p2bbs/MainBBS.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/ch/bfh/p2bbs/Types/G1Point.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/ch/bfh/p2bbs/Types/G1Point.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/ch/bfh/p2bbs/Types/G2Point.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/ch/bfh/p2bbs/Types/G2Point.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/ch/bfh/p2bbs/Types/GTElement.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/ch/bfh/p2bbs/Types/GTElement.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/ch/bfh/p2bbs/Types/InitRes.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/ch/bfh/p2bbs/Types/InitRes.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/ch/bfh/p2bbs/Types/Proof.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/ch/bfh/p2bbs/Types/Proof.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/ch/bfh/p2bbs/Types/Scalar.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/ch/bfh/p2bbs/Types/Scalar.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/ch/bfh/p2bbs/proof/ProofGen.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/ch/bfh/p2bbs/proof/ProofGen.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/ch/bfh/p2bbs/proof/ProofVerify.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/ch/bfh/p2bbs/proof/ProofVerify.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/ch/bfh/p2bbs/signature/Sign.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/ch/bfh/p2bbs/signature/Sign.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/ch/bfh/p2bbs/signature/SignVerify.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/ch/bfh/p2bbs/signature/SignVerify.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/ch/bfh/p2bbs/utils/helper.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/ch/bfh/p2bbs/utils/helper.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/module-info.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/module-info.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/test/java/ch/bfh/p2bbs/key/KeyGenTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/ch/bfh/p2bbs/Types/OctetString.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/ch/bfh/p2bbs/Types/OctetString.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="JUnit5 Test Class" />
+      </list>
+    </option>
   </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/.." />
@@ -41,18 +36,51 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;WebServerToolWindowFactoryState&quot;: &quot;false&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;BBSDemo&quot;,
-    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
-    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
-    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
-    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
-    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "WebServerToolWindowFactoryState": "false",
+    "com.intellij.testIntegration.createTest.CreateTestDialog.defaultLibrary": "JUnit5",
+    "com.intellij.testIntegration.createTest.CreateTestDialog.defaultLibrarySuperClass.JUnit5": "",
+    "git-widget-placeholder": "BBSDemo",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "vue.rearranger.settings.migration": "true"
   }
-}</component>
+}]]></component>
+  <component name="RecentsManager">
+    <key name="CreateTestDialog.Recents.Supers">
+      <recent name="" />
+    </key>
+    <key name="CreateTestDialog.RecentsKey">
+      <recent name="ch.bfh.p2bbs.key" />
+    </key>
+  </component>
+  <component name="RunManager">
+    <configuration name="KeyGenTest.checkKeyPair" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="bbs" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="ch.bfh.p2bbs.key.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <option name="PACKAGE_NAME" value="ch.bfh.p2bbs.key" />
+      <option name="MAIN_CLASS_NAME" value="ch.bfh.p2bbs.key.KeyGenTest" />
+      <option name="METHOD_NAME" value="checkKeyPair" />
+      <option name="TEST_OBJECT" value="method" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <recent_temporary>
+      <list>
+        <item itemvalue="JUnit.KeyGenTest.checkKeyPair" />
+      </list>
+    </recent_temporary>
+  </component>
   <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
   <component name="TaskManager">
     <task active="true" id="Default" summary="Default task">
@@ -63,7 +91,7 @@
       <updated>1705507461581</updated>
       <workItem from="1705507463743" duration="6094000" />
       <workItem from="1705526425968" duration="26000" />
-      <workItem from="1705526491556" duration="4245000" />
+      <workItem from="1705526491556" duration="6001000" />
     </task>
     <servers />
   </component>
@@ -82,6 +110,11 @@
           <url>file://$PROJECT_DIR$/src/main/java/ch/bfh/p2bbs/proof/ProofVerify.java</url>
           <line>38</line>
           <option name="timeStamp" value="66" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/src/test/java/ch/bfh/p2bbs/key/KeyGenTest.java</url>
+          <line>22</line>
+          <option name="timeStamp" value="70" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>
