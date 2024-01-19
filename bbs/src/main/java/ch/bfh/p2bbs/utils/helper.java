@@ -81,7 +81,7 @@ public class helper {
         var L = H_Points.getLength();
         if(header.length > Math.pow(2,64)-1 || L > Math.pow(2,64)-1) throw new Abort("Header is to long or there are to many generators");
         var dom_array = serializationPreparationForDomain(L, Q1, H_Points);
-        var dom_octs = serialize(dom_array);
+        var dom_octs = serialize(dom_array).concat(api_id);
         var dom_input = publicKey.concat(dom_octs).concat(i2osp(Scalar.of(BigInteger.valueOf(header.length)), 8)).concat(header);
         return hash_to_scalar(dom_input, domain_dst);
     }

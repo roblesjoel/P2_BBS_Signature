@@ -39,7 +39,7 @@ public class G1Point extends ECPoint<FpElement, Fp> {
     }
 
     public G1Point add(G1Point other){
-        return new G1Point(G1.add(this.point, other.point));
+        return new G1Point(G1.add(this.point, other.point), (Fp) G1.getField());
     }
 
     public G1Point subtract(G1Point other){
@@ -54,7 +54,7 @@ public class G1Point extends ECPoint<FpElement, Fp> {
         G1Point res = ZERO;
         for (int i = 1; i <= scalars.getLength(); i++) {
             G1Point scalarMultiplyRes = points.getValue(i).times(scalars.getValue(i));
-            res.add(scalarMultiplyRes);
+            res = res.add(scalarMultiplyRes);
         }
         return res;
     }

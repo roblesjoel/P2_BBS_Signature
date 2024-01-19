@@ -42,5 +42,4 @@ class helperTest {
         var generators = create_generators(11, api_id);
         assertTrue(generators.equals(allGenerators));
     }
-
 }

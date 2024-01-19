@@ -58,7 +58,7 @@ public class Proof extends Octuple<G1Point, G1Point, G1Point, Scalar, Scalar, Sc
         temp[4] = getFifth();
         temp[5] = getSixth();
         for (int i = 1; i <= getMsg_commitments().getLength(); i++) {
-            temp[i+3] = getMsg_commitments().getValue(i);
+            temp[i+5] = getMsg_commitments().getValue(i);
         }
         temp[temp.length-1] = getEighth();
         return temp;

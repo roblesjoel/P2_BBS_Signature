@@ -63,7 +63,8 @@ public class ProofGen {
         var H_x = MsgGenerators;
         var H_jx = getIndexedGenerators(generators, jx);
         for (var el: undisclosed_indexes) {
-            if(el < 0 || el > (L-1)) throw new Abort("A undisclosed index is smaller than 0 or bigger that the count of messages");
+            //if(el < 0 || el > (L-1)) throw new Abort("A undisclosed index is smaller than 0 or bigger that the count of messages");
+            if(el < 1 || el > (L)) throw new Abort("A undisclosed index is smaller than 0 or bigger that the count of messages");
         }
         if(U>L) throw new Abort("More undisclosed indexes than messages");
         var domain = calculate_domain(publicKey, Q1, MsgGenerators, header, api_id);
