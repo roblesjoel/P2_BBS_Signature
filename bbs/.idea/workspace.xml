@@ -4,18 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="01f2069e-28ec-457e-9a58-088c57d48379" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/src/test/java/ch/bfh/p2bbs/proof/ProofGenTest.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/test/java/ch/bfh/p2bbs/signature/SignTest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/ch/bfh/p2bbs/Types/G1Point.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/ch/bfh/p2bbs/Types/G1Point.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/ch/bfh/p2bbs/Types/Proof.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/ch/bfh/p2bbs/Types/Proof.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/ch/bfh/p2bbs/proof/ProofGen.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/ch/bfh/p2bbs/proof/ProofGen.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/ch/bfh/p2bbs/signature/Sign.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/ch/bfh/p2bbs/signature/Sign.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/ch/bfh/p2bbs/utils/helper.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/ch/bfh/p2bbs/utils/helper.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/test/java/ch/bfh/p2bbs/key/KeyGenTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/ch/bfh/p2bbs/key/KeyGenTest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/test/java/ch/bfh/p2bbs/utils/helperTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/ch/bfh/p2bbs/utils/helperTest.java" afterDir="false" />
-    </list>
+    <list default="true" id="01f2069e-28ec-457e-9a58-088c57d48379" name="Changes" comment="" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -49,7 +38,7 @@
     "WebServerToolWindowFactoryState": "false",
     "com.intellij.testIntegration.createTest.CreateTestDialog.defaultLibrary": "JUnit5",
     "com.intellij.testIntegration.createTest.CreateTestDialog.defaultLibrarySuperClass.JUnit5": "",
-    "git-widget-placeholder": "BBSDemo",
+    "git-widget-placeholder": "main",
     "node.js.detected.package.eslint": "true",
     "node.js.detected.package.tslint": "true",
     "node.js.selected.package.eslint": "(autodetect)",
@@ -160,7 +149,7 @@
       <updated>1705507461581</updated>
       <workItem from="1705507463743" duration="6094000" />
       <workItem from="1705526425968" duration="26000" />
-      <workItem from="1705526491556" duration="20713000" />
+      <workItem from="1705526491556" duration="21058000" />
     </task>
     <servers />
   </component>
