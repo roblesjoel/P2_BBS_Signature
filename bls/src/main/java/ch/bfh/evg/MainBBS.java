@@ -6,7 +6,10 @@ package ch.bfh.evg;
 
 import ch.bfh.evg.bls12_381.Scalar;
 import ch.bfh.evg.signature.BBS;
-import ch.bfh.evg.signature.OctetString;
+import ch.openchvote.util.set.IntSet;
+
+import java.math.BigInteger;
+import java.util.Arrays;
 import ch.openchvote.util.sequence.Vector;
 import ch.openchvote.util.set.IntSet;
 
@@ -15,7 +18,6 @@ import java.util.Arrays;
 public class MainBBS {
 
     public static void main(String[] args) {
-
         // Create Generator function -> just seen that hashAndMap == hashAndMapToG1
         // Maybe use direct connection to Gx and not GxPoint, discuss
         // Tests
