@@ -9,7 +9,7 @@ import com.herumi.mcl.Mcl;
 
 import java.math.BigInteger;
 
-public class G2Point extends ECPoint<G2Point, FrElement, Pair<FpElement, FpElement>> {
+public class G2Point extends ECPoint<G2Point, Scalar, Pair<FpElement, FpElement>> {
 
     public static final G2Point GENERATOR = getGenerator();
     public static final G2Point ZERO = GENERATOR.subtract(GENERATOR);
@@ -23,7 +23,7 @@ public class G2Point extends ECPoint<G2Point, FrElement, Pair<FpElement, FpEleme
 
     final G2 g2;  // package privacy
 
-    private G2Point(G2 g2) {
+    public G2Point(G2 g2) {
         this.g2 = g2;
     }
 
@@ -34,7 +34,7 @@ public class G2Point extends ECPoint<G2Point, FrElement, Pair<FpElement, FpEleme
     }
 
     public static G2Point getRandom() {
-        return GENERATOR.times(FrElement.getRandom());
+        return GENERATOR.times(Scalar.getRandom());
     }
 
     public static G2Point deserialize(ByteArray byteArray) throws DeserializationException {
@@ -65,7 +65,7 @@ public class G2Point extends ECPoint<G2Point, FrElement, Pair<FpElement, FpEleme
     }
 
     @Override
-    public G2Point times(FrElement scalar) {
+    public G2Point times(Scalar scalar) {
         G2 result = new G2();
         Mcl.mul(result, this.g2, scalar.fr);
         return new G2Point(result);

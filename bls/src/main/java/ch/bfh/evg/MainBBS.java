@@ -4,42 +4,64 @@
 
 package ch.bfh.evg;
 
+import ch.bfh.evg.bls12_381.Scalar;
 import ch.bfh.evg.signature.BBS;
 import ch.openchvote.util.set.IntSet;
 
 import java.math.BigInteger;
 import java.util.Arrays;
 import ch.openchvote.util.sequence.Vector;
+import ch.openchvote.util.set.IntSet;
+
+import java.util.Arrays;
 
 public class MainBBS {
 
     public static void main(String[] args) {
+        // Create Generator function -> just seen that hashAndMap == hashAndMapToG1
+        // Maybe use direct connection to Gx and not GxPoint, discuss
+        // Tests
+        // Documentation
+        // Better (more descriptive) Errors
+        // Not using/not use openchvote utils, to discuss
+        // Output as Hex
+        // Ziel ist Aktueller Draft, 1 zu 1 umgesezt
+        // Logisch gesehen, Test bestehen
+        // Mod funktion in scalar
 
         try{
             // Generate the keys
-            byte[] key_material = new byte[256];
-            byte[] key_info = new byte[0];
-            byte[] key_dst = new byte[0];
-            BigInteger secretKey = BBS.generateSecretKey(key_material,key_info,key_dst);
-            System.out.println("Secret Key:    " + secretKey);
-            byte[] publicKey = BBS.generatePublicKey(secretKey);
-            System.out.println("Public Key:    " + Arrays.toString(publicKey));
+            OctetString key_material = new OctetString(new byte[256]);
+            OctetString key_info = new OctetString(new byte[0]);
+            OctetString key_dst = new OctetString(new byte[0]);
+            Scalar secretKey = BBS.KeyGen(key_material,key_info,key_dst);
+            System.out.println("Secret Key:    " + secretKey.toString());
+            OctetString publicKey = BBS.SkToPk(secretKey);
+            System.out.println("Public Key:    " + publicKey.toString()); // as hex
 
             // Generate and validate the Signature
-            byte[][] messages = new byte[][]{("Hello").getBytes(), ("BBS").getBytes(), ("test").getBytes()};
-            byte[] header = new byte[0];
-            byte[] ph = new byte[0];
-            byte[] signature = BBS.Sign(secretKey, publicKey, header, messages);
-            System.out.println("Signature:   " + Arrays.toString(signature));
+            OctetString msg1 = OctetString.valueOf("Hello");
+            OctetString msg2 = OctetString.valueOf("BBS");
+            OctetString msg3 = OctetString.valueOf("test");
+            Vector<OctetString> messages = Vector.of(msg1, msg2, msg3);
+            Vector<OctetString> empty = Vector.of();
+
+
+            OctetString header = new OctetString(new byte[0]);
+            OctetString ph = new OctetString(new byte[0]);
+            OctetString signature = BBS.Sign(secretKey, publicKey, header, messages);
+            System.out.println("Signature:   " + signature.toString());
             boolean result = BBS.Verify(publicKey, signature, header, messages);
             System.out.println("Signature is:   " + result);
 
             // Generate and verify the Proof
-            byte[][] disclosedMessages = new byte[][]{("Hello").getBytes(), ("test").getBytes()};
-            int[] disclosed_indexes = new int[]{0,2};
-            byte[] proof = BBS.ProofGen(publicKey, signature, header, ph, messages, disclosed_indexes); // Must first verify the signature
-            System.out.println("Proof:   " + Arrays.toString(proof));
-            boolean proofValid = BBS.ProofVerify(publicKey, proof, header, ph, disclosedMessages, disclosed_indexes);
+            var disclosed_indexes_test = IntSet.of(1, 3);
+            Vector<OctetString> disclosedMessages = messages.select(disclosed_indexes_test);//Vector.of(msg1, msg3);
+            Vector<Integer> disclosed_indexes = Vector.of(1,2,3);
+            Vector<Integer> disclosed_indexes_empty = Vector.of();
+            OctetString proof = BBS.ProofGen(publicKey, signature, header, ph, messages, disclosed_indexes);
+            System.out.println("Proof:   " + proof.toString());
+            boolean proofValid = BBS.ProofVerify(publicKey, proof, header, ph, messages, disclosed_indexes);
             System.out.println("Proof is:   " + proofValid);
         }catch (Exception e){
             System.out.println(e);

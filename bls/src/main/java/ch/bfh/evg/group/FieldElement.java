@@ -1,10 +1,8 @@
 package ch.bfh.evg.group;
 
-import ch.bfh.evg.jni.JNI;
-
 import java.math.BigInteger;
 
-public abstract class FieldElement<F extends FieldElement<F>> extends JNI implements AdditiveElement<F, F>, MultiplicativeElement<F, F> {
+public abstract class FieldElement<F extends FieldElement<F>> implements AdditiveElement<F, F>, MultiplicativeElement<F, F> {
 
     protected abstract BigInteger toBigInteger();
 

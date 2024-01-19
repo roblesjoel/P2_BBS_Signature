@@ -1,0 +1,197 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="01f2069e-28ec-457e-9a58-088c57d48379" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/src/test/java/ch/bfh/p2bbs/proof/ProofGenTest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/test/java/ch/bfh/p2bbs/signature/SignTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/ch/bfh/p2bbs/Types/G1Point.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/ch/bfh/p2bbs/Types/G1Point.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/ch/bfh/p2bbs/Types/Proof.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/ch/bfh/p2bbs/Types/Proof.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/ch/bfh/p2bbs/proof/ProofGen.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/ch/bfh/p2bbs/proof/ProofGen.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/ch/bfh/p2bbs/signature/Sign.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/ch/bfh/p2bbs/signature/Sign.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/ch/bfh/p2bbs/utils/helper.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/ch/bfh/p2bbs/utils/helper.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/java/ch/bfh/p2bbs/key/KeyGenTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/ch/bfh/p2bbs/key/KeyGenTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/java/ch/bfh/p2bbs/utils/helperTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/ch/bfh/p2bbs/utils/helperTest.java" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="JUnit5 Test Class" />
+      </list>
+    </option>
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/.." />
+  </component>
+  <component name="MavenImportPreferences">
+    <option name="generalSettings">
+      <MavenGeneralSettings>
+        <option name="useMavenConfig" value="true" />
+      </MavenGeneralSettings>
+    </option>
+  </component>
+  <component name="ProjectId" id="2b5ab0xcNZNKy7CbS4xOA7xV4wx" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "WebServerToolWindowFactoryState": "false",
+    "com.intellij.testIntegration.createTest.CreateTestDialog.defaultLibrary": "JUnit5",
+    "com.intellij.testIntegration.createTest.CreateTestDialog.defaultLibrarySuperClass.JUnit5": "",
+    "git-widget-placeholder": "BBSDemo",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "settings.editor.selected.configurable": "preferences.lookFeel",
+    "vue.rearranger.settings.migration": "true"
+  }
+}]]></component>
+  <component name="RecentsManager">
+    <key name="CreateTestDialog.Recents.Supers">
+      <recent name="" />
+    </key>
+    <key name="CreateTestDialog.RecentsKey">
+      <recent name="ch.bfh.p2bbs.proof" />
+      <recent name="ch.bfh.p2bbs.signature" />
+      <recent name="ch.bfh.p2bbs.utils" />
+      <recent name="ch.bfh.p2bbs.key" />
+    </key>
+  </component>
+  <component name="RunManager" selected="JUnit.java in bbs">
+    <configuration name="ProofGenTest" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="bbs" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="ch.bfh.p2bbs.proof.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <option name="PACKAGE_NAME" value="ch.bfh.p2bbs.proof" />
+      <option name="MAIN_CLASS_NAME" value="ch.bfh.p2bbs.proof.ProofGenTest" />
+      <option name="TEST_OBJECT" value="class" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="ProofGenTest.noHeaderValidProof" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="bbs" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="ch.bfh.p2bbs.proof.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <option name="PACKAGE_NAME" value="ch.bfh.p2bbs.proof" />
+      <option name="MAIN_CLASS_NAME" value="ch.bfh.p2bbs.proof.ProofGenTest" />
+      <option name="METHOD_NAME" value="noHeaderValidProof" />
+      <option name="TEST_OBJECT" value="method" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="SignTest" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="bbs" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="ch.bfh.p2bbs.signature.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <option name="PACKAGE_NAME" value="ch.bfh.p2bbs.signature" />
+      <option name="MAIN_CLASS_NAME" value="ch.bfh.p2bbs.signature.SignTest" />
+      <option name="TEST_OBJECT" value="class" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="SignTest.modifiedMessageSignature" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="bbs" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="ch.bfh.p2bbs.signature.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <option name="PACKAGE_NAME" value="ch.bfh.p2bbs.signature" />
+      <option name="MAIN_CLASS_NAME" value="ch.bfh.p2bbs.signature.SignTest" />
+      <option name="METHOD_NAME" value="modifiedMessageSignature" />
+      <option name="TEST_OBJECT" value="method" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="java in bbs" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="bbs" />
+      <option name="TEST_OBJECT" value="directory" />
+      <dir value="$PROJECT_DIR$/src/test/java" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <recent_temporary>
+      <list>
+        <item itemvalue="JUnit.java in bbs" />
+        <item itemvalue="JUnit.ProofGenTest" />
+        <item itemvalue="JUnit.ProofGenTest.noHeaderValidProof" />
+        <item itemvalue="JUnit.SignTest.modifiedMessageSignature" />
+        <item itemvalue="JUnit.SignTest" />
+      </list>
+    </recent_temporary>
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="01f2069e-28ec-457e-9a58-088c57d48379" name="Changes" comment="" />
+      <created>1705507461581</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1705507461581</updated>
+      <workItem from="1705507463743" duration="6094000" />
+      <workItem from="1705526425968" duration="26000" />
+      <workItem from="1705526491556" duration="20713000" />
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/src/main/java/ch/bfh/p2bbs/proof/ProofVerify.java</url>
+          <line>35</line>
+          <option name="timeStamp" value="55" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/src/main/java/ch/bfh/p2bbs/proof/ProofVerify.java</url>
+          <line>38</line>
+          <option name="timeStamp" value="66" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
+    <pin-to-top-manager>
+      <pinned-members>
+        <PinnedItemInfo parentTag="ch.bfh.hnr1.bls.Params$G1" memberName="DST_hash" />
+        <PinnedItemInfo parentTag="ch.openchvote.util.sequence.Vector$Builder" memberName="growable" />
+      </pinned-members>
+    </pin-to-top-manager>
+  </component>
+  <component name="com.intellij.coverage.CoverageDataManagerImpl">
+    <SUITE FILE_PATH="coverage/bbs$SignTest_checkSingleMessageSignature.ic" NAME="SignTest.checkSingleMessageSignature Coverage Results" MODIFIED="1705615641079" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="idea" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false">
+      <FILTER>ch.bfh.p2bbs.signature.*</FILTER>
+    </SUITE>
+  </component>
+</project>

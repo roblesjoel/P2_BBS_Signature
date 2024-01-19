@@ -2,13 +2,14 @@ package ch.bfh.evg.bls12_381;
 
 import ch.bfh.evg.group.ECPoint;
 import ch.openchvote.util.sequence.ByteArray;
+import ch.openchvote.util.sequence.Vector;
 import com.herumi.mcl.G1;
 import com.herumi.mcl.GT;
 import com.herumi.mcl.Mcl;
 
 import java.math.BigInteger;
 
-public class G1Point extends ECPoint<G1Point, FrElement, FpElement> {
+public class G1Point extends ECPoint<G1Point, Scalar, FpElement> {
 
     public static final G1Point GENERATOR = getGenerator();
     public static final G1Point ZERO = GENERATOR.subtract(GENERATOR);
@@ -20,7 +21,7 @@ public class G1Point extends ECPoint<G1Point, FrElement, FpElement> {
 
     final G1 g1;  // package privacy
 
-    private G1Point(G1 g1) {
+    public G1Point(G1 g1) {
         this.g1 = g1;
     }
 
@@ -31,7 +32,7 @@ public class G1Point extends ECPoint<G1Point, FrElement, FpElement> {
     }
 
     public static G1Point getRandom() {
-        return GENERATOR.times(FrElement.getRandom());
+        return GENERATOR.times(Scalar.getRandom());
     }
 
     public static G1Point deserialize(ByteArray byteArray) throws DeserializationException {
@@ -54,6 +55,15 @@ public class G1Point extends ECPoint<G1Point, FrElement, FpElement> {
         return new G1Point(result);
     }
 
+    public static G1Point sumOfScalarMultiply(Vector<G1Point> points, Vector<Scalar> scalars){
+        G1Point res = ZERO;
+        for (int i = 1; i <= scalars.getLength(); i++) {
+            G1Point scalarMultiplyRes = points.getValue(i).times(scalars.getValue(i));
+            res.add(scalarMultiplyRes);
+        }
+        return res;
+    }
+
     @Override
     public G1Point add(G1Point other) {
         G1 result = new G1();
@@ -62,7 +72,7 @@ public class G1Point extends ECPoint<G1Point, FrElement, FpElement> {
     }
 
     @Override
-    public G1Point times(FrElement scalar) {
+    public G1Point times(Scalar scalar) {
         G1 result = new G1();
         Mcl.mul(result, this.g1, scalar.fr);
         return new G1Point(result);
@@ -117,3 +127,5 @@ public class G1Point extends ECPoint<G1Point, FrElement, FpElement> {
     }
 
 }
+
+

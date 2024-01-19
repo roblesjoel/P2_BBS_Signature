@@ -10,22 +10,22 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class FrElementTest {
 
-    static final FrElement ZERO = FrElement.of(BigInteger.ZERO);
-    static final FrElement ONE = FrElement.of(BigInteger.ONE);
-    static final FrElement TWO = FrElement.of(BigInteger.TWO);
-    static final FrElement TEN = FrElement.of(BigInteger.TEN);
-    static final Stream<FrElement> fixedElements = Stream.of(ZERO, ONE, TEN);
+    static final Scalar ZERO = Scalar.of(BigInteger.ZERO);
+    static final Scalar ONE = Scalar.of(BigInteger.ONE);
+    static final Scalar TWO = Scalar.of(BigInteger.TWO);
+    static final Scalar TEN = Scalar.of(BigInteger.TEN);
+    static final Stream<Scalar> fixedElements = Stream.of(ZERO, ONE, TEN);
 
     static final int n = 100;
-    static final Stream<FrElement> randomElements = Stream.generate(FrElement::getRandom).limit(n);
+    static final Stream<Scalar> randomElements = Stream.generate(Scalar::getRandom).limit(n);
 
-    static final List<FrElement> testElements = Stream.concat(fixedElements, randomElements).toList();
+    static final List<Scalar> testElements = Stream.concat(fixedElements, randomElements).toList();
 
 
     @Test
     void testToString() {
-        for (FrElement element : testElements) {
-            assertEquals(FrElement.BYTE_LENGTH * 2, element.toString().length());
+        for (Scalar element : testElements) {
+            assertEquals(Scalar.BYTE_LENGTH * 2, element.toString().length());
         }
         assertEquals("0000000000000000000000000000000000000000000000000000000000000000", ZERO.toString());
         assertEquals("0000000000000000000000000000000000000000000000000000000000000001", ONE.toString());
@@ -44,8 +44,8 @@ class FrElementTest {
     @Test
     void testOf() {
         assertDoesNotThrow(() -> {
-            for (FrElement element : testElements) {
-                assertEquals(element, FrElement.of(element.toBigInteger()));
+            for (Scalar element : testElements) {
+                assertEquals(element, Scalar.of(element.toBigInteger()));
             }
         });
     }
@@ -53,16 +53,16 @@ class FrElementTest {
 
     @Test
     void testSerialize() {
-        for (FrElement element : testElements) {
-            assertEquals(FrElement.BYTE_LENGTH, element.serialize().getLength());
+        for (Scalar element : testElements) {
+            assertEquals(Scalar.BYTE_LENGTH, element.serialize().getLength());
         }
     }
 
     @Test
     void testDeserialize() {
         assertDoesNotThrow(() -> {
-            for (FrElement element : testElements) {
-                assertEquals(element, FrElement.deserialize(element.serialize()));
+            for (Scalar element : testElements) {
+                assertEquals(element, Scalar.deserialize(element.serialize()));
             }
         });
     }
@@ -71,7 +71,7 @@ class FrElementTest {
     void testAdd() {
         for (var e1 : testElements) {
             for (var e2 : testElements) {
-                var sum = FrElement.of(e1.toBigInteger().add(e2.toBigInteger()).mod(FrElement.MODULUS));
+                var sum = Scalar.of(e1.toBigInteger().add(e2.toBigInteger()).mod(Scalar.MODULUS));
                 assertEquals(sum, e1.add(e2));
             }
         }
@@ -81,7 +81,7 @@ class FrElementTest {
     void testSubtract() {
         for (var e1 : testElements) {
             for (var e2 : testElements) {
-                var diff = FrElement.of(e1.toBigInteger().subtract(e2.toBigInteger()).mod(FrElement.MODULUS));
+                var diff = Scalar.of(e1.toBigInteger().subtract(e2.toBigInteger()).mod(Scalar.MODULUS));
                 assertEquals(diff, e1.subtract(e2));
             }
         }
@@ -91,7 +91,7 @@ class FrElementTest {
     void testMultiply() {
         for (var e1 : testElements) {
             for (var e2 : testElements) {
-                var prod = FrElement.of(e1.toBigInteger().multiply(e2.toBigInteger()).mod(FrElement.MODULUS));
+                var prod = Scalar.of(e1.toBigInteger().multiply(e2.toBigInteger()).mod(Scalar.MODULUS));
                 assertEquals(prod, e1.multiply(e2));
             }
         }
@@ -102,7 +102,7 @@ class FrElementTest {
         for (var e1 : testElements) {
             for (var e2 : testElements) {
                 if (!e2.isZero()) {
-                    var frac = FrElement.of(e1.toBigInteger().multiply(e2.toBigInteger().modInverse(FrElement.MODULUS)).mod(FrElement.MODULUS));
+                    var frac = Scalar.of(e1.toBigInteger().multiply(e2.toBigInteger().modInverse(Scalar.MODULUS)).mod(Scalar.MODULUS));
                     assertEquals(frac, e1.divide(e2));
                 }
             }
@@ -126,7 +126,7 @@ class FrElementTest {
             if (e.isZero()) {
                 assertTrue(e.negate().isZero());
             } else {
-                var neg = FrElement.of(FrElement.MODULUS.subtract(e.toBigInteger()));
+                var neg = Scalar.of(Scalar.MODULUS.subtract(e.toBigInteger()));
                 assertEquals(neg, e.negate());
             }
         }
@@ -136,7 +136,7 @@ class FrElementTest {
     void testInverse() {
         for (var e : testElements) {
             if (!e.isZero()) {
-                var inv = FrElement.of(e.toBigInteger().modInverse(FrElement.MODULUS));
+                var inv = Scalar.of(e.toBigInteger().modInverse(Scalar.MODULUS));
                 assertEquals(inv, e.inverse());
             }
         }

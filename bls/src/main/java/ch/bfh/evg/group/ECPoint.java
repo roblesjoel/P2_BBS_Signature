@@ -1,8 +1,6 @@
 package ch.bfh.evg.group;
 
-import ch.bfh.evg.jni.JNI;
-
-public abstract class ECPoint<E extends ECPoint<E, F, G>, F extends FieldElement<F>, G> extends JNI implements AdditiveElement<E, F> {
+public abstract class ECPoint<E extends ECPoint<E, F, G>, F extends FieldElement<F>, G> implements AdditiveElement<E, F> {
 
     public static final String INFINITY = "INFINITY";
 
