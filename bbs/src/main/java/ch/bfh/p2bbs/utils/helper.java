@@ -90,20 +90,11 @@ public class helper {
     public static OctetString serialize(Object[] input_array){
         var octect_result = new OctetString();
         for (Object el : input_array) {
-            switch (el.getClass().getName()) {
-                case "ch.bfh.p2bbs.Types.G1Point" -> {
-                    var element = (G1Point) el;
-                    octect_result = octect_result.concat(new OctetString(element.serialize()));
-                }
-                case "ch.bfh.p2bbs.Types.G2Point" -> {
-                    var element = (G2Point) el;
-                    octect_result = octect_result.concat(new OctetString(element.serialize()));
-                }
-                case "ch.bfh.p2bbs.Types.Scalar" -> {
-                    octect_result = octect_result.concat(i2osp((Scalar) el, Octet_Scalar_Length.toInt()));
-                }
-                case "java.lang.Integer" -> {
-                    var element = (int) el;
+            switch (el) {
+                case G1Point element-> octect_result = octect_result.concat(new OctetString(element.serialize()));
+                case G2Point element -> octect_result = octect_result.concat(new OctetString(element.serialize()));
+                case Scalar element -> octect_result = octect_result.concat(i2osp(element, Octet_Scalar_Length.toInt()));
+                case Integer element -> {
                     if (element < 0 || element > Math.pow(2,64)-1) return OctetString.INVALID;
                     octect_result = octect_result.concat(i2osp(Scalar.of(BigInteger.valueOf(element)), 8));
                 }

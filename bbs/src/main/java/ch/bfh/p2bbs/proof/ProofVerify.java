@@ -88,7 +88,7 @@ public class ProofVerify {
     }
 
     private static Vector<G1Point> getIndexedGenerators(Vector<G1Point> generators, Vector<Integer> indexes){
-        Vector.Builder<G1Point> builder = new Vector.Builder<G1Point>(generators.getLength()-1);
+        var builder = new Vector.Builder<G1Point>(generators.getLength()-1);
         for (int disclosedIndex: indexes) {
             builder.addValue(generators.getValue(disclosedIndex));
         }

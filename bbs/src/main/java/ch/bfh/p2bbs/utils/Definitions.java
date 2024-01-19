@@ -16,8 +16,8 @@ public class Definitions {
     public static final int Expand_Len = 48;
     public static final BigInteger r = new BigInteger("073eda753299d7d483339d80809a1d80553bda402fffe5bfeffffffff00000001", 16);
     public static final BLS12 BLS12381 = new BLS12(Params.BLS12_381);
-    public static final BLS.G1 G1 = BLS12381.G1;
-    public static final BLS.G2 G2 = BLS12381.G2;
+    public static final BLS12.G1 G1 = BLS12381.G1;
+    public static final BLS12.G2 G2 = BLS12381.G2;
     public static final BLS12.GT GT = BLS12381.GT;
     public static final G1Point P1 = G1Point.deserialize(OctetString.valueOfHexString("a8ce256102840821a3e94ea9025e4662b205762f9776b3a766c872b948f1fd225e7c59698588e70d11406d161b4e28c9").toBytes());
 }

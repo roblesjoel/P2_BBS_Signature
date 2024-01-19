@@ -57,14 +57,22 @@
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>3.0.0-M6</version>
             </plugin>
-            <!--<plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <source>21</source>
+                    <target>21</target>
+                </configuration>
+            </plugin>
+            <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>exec-maven-plugin</artifactId>
                 <version>3.1.1</version>
                 <configuration>
-                    <mainClass>ch.bfh.evg.MainBBS</mainClass>
+                    <mainClass>ch.bfh.p2bbs.MainBBS</mainClass>
                 </configuration>
-            </plugin> -->
+            </plugin>
         </plugins>
     </build>
 

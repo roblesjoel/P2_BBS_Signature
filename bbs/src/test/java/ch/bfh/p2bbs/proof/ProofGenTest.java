@@ -41,7 +41,6 @@ class ProofGenTest {
     private Vector<Scalar> mockedRandomScalars(OctetString SEED, OctetString dst, int count){
         if(count * Expand_Len > 65535) throw new Abort("To many scalars to be mocked");
         var out_len = Expand_Len * count;
-        var test = dst.toString();
         var v = new OctetString(expandMessageXMD_SHA_256(SEED.toBytes(), dst.toBytes(), out_len));
         var r_i = new Vector.Builder<Scalar>();
         for (int i = 1; i <= count ; i++) {

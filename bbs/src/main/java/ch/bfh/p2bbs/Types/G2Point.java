@@ -2,11 +2,8 @@ package ch.bfh.p2bbs.Types;
 
 import ch.bfh.hnr1.element.ECPoint;
 import ch.bfh.hnr1.element.Fp2Element;
-import ch.bfh.hnr1.element.FpElement;
-import ch.bfh.hnr1.field.Fp;
 import ch.bfh.hnr1.field.Fp2;
 
-import static ch.bfh.p2bbs.utils.Definitions.G1;
 import static ch.bfh.p2bbs.utils.Definitions.G2;
 
 public class G2Point extends ECPoint<Fp2Element, Fp2> {

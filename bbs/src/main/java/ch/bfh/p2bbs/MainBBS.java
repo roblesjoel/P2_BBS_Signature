@@ -1,6 +1,5 @@
 package ch.bfh.p2bbs;
 
-import ch.bfh.p2bbs.Types.Proof;
 import ch.bfh.p2bbs.Types.Scalar;
 import ch.bfh.p2bbs.key.KeyGen;
 import ch.bfh.p2bbs.Types.OctetString;

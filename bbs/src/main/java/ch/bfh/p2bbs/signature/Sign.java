@@ -7,7 +7,6 @@ import ch.bfh.p2bbs.Types.Scalar;
 import ch.bfh.p2bbs.Types.OctetString;
 
 
-import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 
 import static ch.bfh.p2bbs.utils.Definitions.*;

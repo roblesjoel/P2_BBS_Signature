@@ -1,8 +1,6 @@
 package ch.bfh.p2bbs.Types;
 
-import ch.bfh.hnr1.element.ECPoint;
 import ch.bfh.hnr1.element.Fp12Element;
-import ch.bfh.hnr1.field.Fp12;
 
 import static ch.bfh.p2bbs.utils.Definitions.GT;
 

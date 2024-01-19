@@ -1,7 +1,5 @@
 package ch.bfh.p2bbs.Types;
 
-import ch.openchvote.util.tuples.Quadruple;
-import ch.openchvote.util.tuples.Septuple;
 import ch.openchvote.util.tuples.Sextuple;
 
 public class InitRes extends Sextuple<G1Point, G1Point, G1Point, G1Point, G1Point, Scalar> {
