@@ -7,3 +7,9 @@
 *.pdf
 *.gz
 *.bbl
+*.toc
+*.bcf
+*.ist
+*.glo
+*.glsdefs
+*.xml
