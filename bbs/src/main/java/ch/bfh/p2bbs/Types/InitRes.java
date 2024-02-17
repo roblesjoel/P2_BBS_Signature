@@ -34,7 +34,7 @@ public class InitRes extends Sextuple<G1Point, G1Point, G1Point, G1Point, G1Poin
     }
 
     public G1Point getT2() {
-        return getFirst();
+        return getFifth();
     }
 
     public Scalar getDomain() {

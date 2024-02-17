@@ -29,8 +29,8 @@ class helperTest {
     @Test
     public void hastToScalarTest(){
         var msg = OctetString.valueOfHexString("9872ad089e452c7b6e283dfac2a80d58e8d0ff71cc4d5e310a1debdda4a45f02");
-        var dst = OctetString.valueOfHexString("4242535f424c53313233383147315f584d443a5348412d3235365f535357555f524f5f4832475f484d32535f4d41505f4d53475f544f5f5343414c41525f41535f484153485f");
-        var output = Scalar.of(new BigInteger("1cb5bb86114b34dc438a911617655a1db595abafac92f47c5001799cf624b430", 16));
+        var dst = OctetString.valueOfHexString("4242535f424c53313233383147315f584d443a5348412d3235365f535357555f524f5f4832475f484d32535f4832535f");
+        var output = Scalar.of(new BigInteger("0f90cbee27beb214e6545becb8404640d3612da5d6758dffeccd77ed7169807c", 16));
         var hashedMsg = hash_to_scalar(msg,dst);
         assertTrue(hashedMsg.equals(output));
     }

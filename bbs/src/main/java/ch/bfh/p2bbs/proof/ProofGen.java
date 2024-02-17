@@ -5,7 +5,10 @@ import ch.bfh.p2bbs.excptions.Abort;
 import ch.openchvote.util.sequence.Vector;
 
 import java.nio.charset.StandardCharsets;
+import java.util.function.Function;
+import java.util.function.IntConsumer;
 
+import static ch.bfh.hnr1.util.Hash.expandMessageXMD_SHA_256;
 import static ch.bfh.p2bbs.utils.Definitions.*;
 import static ch.bfh.p2bbs.utils.helper.*;
 
@@ -19,7 +22,7 @@ public class ProofGen {
     }
 
     // see: https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-bbs-signatures-05#name-coreproofgen
-    private static OctetString CoreProofGen(OctetString publicKey, OctetString signature_octets, Vector<G1Point> generators, OctetString header, OctetString ph, Vector<Scalar> messages, Vector<Integer> disclosed_indexes, OctetString api_id) {
+    static OctetString CoreProofGen(OctetString publicKey, OctetString signature_octets, Vector<G1Point> generators, OctetString header, OctetString ph, Vector<Scalar> messages, Vector<Integer> disclosed_indexes, OctetString api_id) {
         var signature_result = octets_to_signature(signature_octets);
         if(signature_result.isInvalid()) return OctetString.INVALID;
         var L = messages.getLength();
@@ -45,7 +48,7 @@ public class ProofGen {
     }
 
     // see: https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-bbs-signatures-05#name-proof-initialization
-    private static InitRes ProofInit(OctetString publicKey, Signature signature, Vector<G1Point> generators, Vector<Scalar> random_scalars, OctetString header, Vector<Scalar> messages, Vector<Integer> undisclosed_indexes, OctetString api_id) {
+    static InitRes ProofInit(OctetString publicKey, Signature signature, Vector<G1Point> generators, Vector<Scalar> random_scalars, OctetString header, Vector<Scalar> messages, Vector<Integer> undisclosed_indexes, OctetString api_id) {
         var L = messages.getLength();
         var U = undisclosed_indexes.getLength();
         var jx = undisclosed_indexes;
@@ -60,7 +63,7 @@ public class ProofGen {
         var Q1 = generators.getValue(1);
         var MsgGenerators = getHPoints(generators);
         var H_x = MsgGenerators;
-        var H_jx = getIndexedGenerators(generators, jx);
+        var H_jx = getIndexedGenerators(MsgGenerators, jx);
         for (var el: undisclosed_indexes) {
             //if(el < 0 || el > (L-1)) throw new Abort("A undisclosed index is smaller than 0 or bigger that the count of messages");
             if(el < 1 || el > (L)) throw new Abort("A undisclosed index is smaller than 0 or bigger that the count of messages");
@@ -77,7 +80,7 @@ public class ProofGen {
     }
 
     // see: https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-bbs-signatures-05#name-proof-finalization
-    private static OctetString ProofFinalize(InitRes init_res, Scalar challenge, Scalar e_value, Vector<Scalar> random_scalars, Vector<Scalar> undisclosed_messages) {
+    static OctetString ProofFinalize(InitRes init_res, Scalar challenge, Scalar e_value, Vector<Scalar> random_scalars, Vector<Scalar> undisclosed_messages) {
         var U = undisclosed_messages.getLength();
         if(random_scalars.getLength() != (U+5)) return OctetString.INVALID;
         var r1 = random_scalars.getValue(1);
@@ -91,7 +94,7 @@ public class ProofGen {
         var Bbar = init_res.getBbar();
         var D = init_res.getD();
         var r3 = r2.modInverse(r);
-        var eCalc= e_.add(e_value.multiply(challenge)).mod(r);
+        var eCalc= e_.add(e_value.multiply(challenge).mod(r)).mod(r);
         var r1Calc = r1_.substract(r1.multiply(challenge)).mod(r);
         var r3Calc = r3_.substract(r3.multiply(challenge)).mod(r);
         var builder = new Vector.Builder<Scalar>(U);
@@ -104,11 +107,11 @@ public class ProofGen {
     }
 
     // see: https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-bbs-signatures-05#name-proof-to-octets
-    private static OctetString proof_to_octets(Proof proof) {
+    static OctetString proof_to_octets(Proof proof) {
         return serialize(proof.toObjectArray());
     }
 
-    private static Vector<Integer> splitIndexes(Vector<Integer> disclosed_indexes, int L, int U){
+    public static Vector<Integer> splitIndexes(Vector<Integer> disclosed_indexes, int L, int U){
         var builder = new Vector.Builder<Integer>(U);
         for (int i = 1; i <= L; i++) {
             var found = false;
@@ -123,7 +126,7 @@ public class ProofGen {
         return builder.build();
     }
 
-    private static Vector<Scalar> getIndexedMessages(Vector<Scalar> messages, Vector<Integer> indexes){
+    static Vector<Scalar> getIndexedMessages(Vector<Scalar> messages, Vector<Integer> indexes){
         var builder = new Vector.Builder<Scalar>(indexes.getLength());
         for (int disclosedIndex: indexes) {
             builder.addValue(messages.getValue(disclosedIndex));
@@ -131,7 +134,7 @@ public class ProofGen {
         return builder.build();
     }
 
-    private static Vector<Scalar> calculate_random_scalars(int count){
+    public static Vector<Scalar> calculate_random_scalars(int count){
         var builder = new Vector.Builder<Scalar>(count);
         for (int i = 0; i < count; i++) {
             builder.addValue(os2ip(randomBytes(Expand_Len)).mod(r));
@@ -139,13 +142,13 @@ public class ProofGen {
         return builder.build();
     }
 
-    private static OctetString randomBytes(int n) {
+    static OctetString randomBytes(int n) {
         var randomBytes = new byte[n];
         SECURE_RANDOM.nextBytes(randomBytes);
         return new OctetString(randomBytes);
     }
 
-    private static Vector<Scalar> splitScalarVector(Vector<Scalar> scalars, int start){
+    static Vector<Scalar> splitScalarVector(Vector<Scalar> scalars, int start){
         var builder = new Vector.Builder<Scalar>(scalars.getLength()-start+1);
         for (int i = start; i <= scalars.getLength(); i++) {
             builder.addValue(scalars.getValue(i));
@@ -153,7 +156,7 @@ public class ProofGen {
         return builder.build();
     }
 
-    private static Vector<G1Point> getIndexedGenerators(Vector<G1Point> generators, Vector<Integer> indexes){
+    static Vector<G1Point> getIndexedGenerators(Vector<G1Point> generators, Vector<Integer> indexes){
         var builder = new Vector.Builder<G1Point>(generators.getLength()-1);
         for (int disclosedIndex: indexes) {
             builder.addValue(generators.getValue(disclosedIndex));

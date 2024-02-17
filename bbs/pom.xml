@@ -23,7 +23,13 @@
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-api</artifactId>
-            <version>5.9.1</version>
+            <version>5.10.2</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
+            <version>5.10.0</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -35,6 +41,11 @@
             <groupId>ch.bfh.hnr1</groupId>
             <artifactId>BLS12-381</artifactId>
             <version>1.0.4-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>com.googlecode.json-simple</groupId>
+            <artifactId>json-simple</artifactId>
+            <version>1.1.1</version>
         </dependency>
     </dependencies>
 

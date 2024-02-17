@@ -22,7 +22,7 @@ public class ProofVerify {
     }
 
     // see: https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-bbs-signatures-05#name-coreproofverify
-    private static boolean CoreProofVerify(OctetString publicKey, OctetString proof_octets, Vector<G1Point> generators, OctetString header, OctetString ph, Vector<Scalar> disclosed_messages, Vector<Integer> disclosed_indexes, OctetString api_id) {
+    public static boolean CoreProofVerify(OctetString publicKey, OctetString proof_octets, Vector<G1Point> generators, OctetString header, OctetString ph, Vector<Scalar> disclosed_messages, Vector<Integer> disclosed_indexes, OctetString api_id) {
         var proof_result = octets_to_proof(proof_octets);
         if(proof_result.isInvalid()) return false;
         var Abar = proof_result.getAbar();
@@ -40,7 +40,7 @@ public class ProofVerify {
     }
 
     // see: https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-bbs-signatures-05#name-proof-verification-initiali
-    private static InitRes ProofVerifyInit(OctetString PK, Proof proof, Vector<G1Point> generators, OctetString header, Vector<Scalar> disclosed_messages, Vector<Integer> disclosed_indexes, OctetString api_id) {
+    public static InitRes ProofVerifyInit(OctetString PK, Proof proof, Vector<G1Point> generators, OctetString header, Vector<Scalar> disclosed_messages, Vector<Integer> disclosed_indexes, OctetString api_id) {
         var Abar = proof.getAbar();
         var Bbar = proof.getBbar();
         var D = proof.getD();
@@ -58,13 +58,13 @@ public class ProofVerify {
             // change reason, vector starts with 1 and not 0
             if(el < 1 || el > (L)) return InitRes.INVALID;
         }
-        var jx = splitIndexes(disclosed_indexes, L, U);
         if(disclosed_messages.getLength() != R) return InitRes.INVALID;
+        var jx = splitIndexes(disclosed_indexes, L, U);
         if(generators.getLength() != L+1) return InitRes.INVALID;
         var Q_1 = generators.getValue(1);
         var H_x = getHPoints(generators);
-        var H_ix = getIndexedGenerators(generators, ix);
-        var H_jx = getIndexedGenerators(generators, jx);
+        var H_ix = getIndexedGenerators(H_x, ix);
+        var H_jx = getIndexedGenerators(H_x, jx);
         var domain = calculate_domain(PK, Q_1, H_x, header, api_id);
         var T1 = Bbar.times(c).add(Abar.times(eCalc)).add(D.times(r1Calc));
         var Bv = P1.add(Q_1.times(domain)).add(G1Point.sumOfScalarMultiply(H_ix, disclosed_messages));
@@ -72,7 +72,7 @@ public class ProofVerify {
         return new InitRes(Abar, Bbar, D, T1, T2, domain);
     }
 
-    private static Vector<Integer> splitIndexes(Vector<Integer> disclosed_indexes, int L, int U){
+    public static Vector<Integer> splitIndexes(Vector<Integer> disclosed_indexes, int L, int U){
         var builder = new Vector.Builder<Integer>(U);
         for (int i = 1; i <= L; i++) {
             var found = false;
@@ -87,8 +87,8 @@ public class ProofVerify {
         return builder.build();
     }
 
-    private static Vector<G1Point> getIndexedGenerators(Vector<G1Point> generators, Vector<Integer> indexes){
-        var builder = new Vector.Builder<G1Point>(generators.getLength()-1);
+    public static Vector<G1Point> getIndexedGenerators(Vector<G1Point> generators, Vector<Integer> indexes){
+        var builder = new Vector.Builder<G1Point>(indexes.getLength());
         for (int disclosedIndex: indexes) {
             builder.addValue(generators.getValue(disclosedIndex));
         }

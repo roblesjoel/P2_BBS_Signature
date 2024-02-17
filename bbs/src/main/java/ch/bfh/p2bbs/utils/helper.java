@@ -38,12 +38,13 @@ public class helper {
 
     // see: https://www.rfc-editor.org/rfc/rfc8017.html#section-4.2
     public static Scalar os2ip(OctetString data) {
-        return Scalar.of(new BigInteger(data.toBytes()).mod(r));
+        return Scalar.of(new BigInteger(1, data.toBytes()).mod(r));
     }
 
     // see: https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-bbs-signatures-05#name-hash-to-scalar
     public static Scalar hash_to_scalar(OctetString msg_octets, OctetString dst){
         if(dst.length > 255) throw new Abort("Dst is to long");
+        var test = expandMessageXMD_SHA_256(msg_octets.toBytes(), dst.toBytes(), Expand_Len);
         var uniform_bytes = new OctetString(expandMessageXMD_SHA_256(msg_octets.toBytes(), dst.toBytes(), Expand_Len));//expand_message_xof(msg_octets, dst, Expand_Len);
         return os2ip(uniform_bytes).mod(r);
     }
@@ -151,7 +152,7 @@ public class helper {
         if(index != proof_octets.length) return Proof.INVALID;
         var builder = new Vector.Builder<Scalar>(j-4);
         if(j > 4){
-            for (int i = 4; i < j; i++) {
+            for (int i = 3; i < j-1; i++) {
                 builder.addValue(scalars.get(i));
             }
         }
@@ -166,9 +167,8 @@ public class helper {
         if(disclosed_messages.getLength() != R) return Scalar.INVALID;
         if(R > Math.pow(2,64)-1 || ph.length > Math.pow(2,64)-1) throw new Abort("To many disclosed indexes or the ph is to long");
         var c_arr = createCArray(init_res, disclosed_indexes, disclosed_messages);
-        // from note
-        if(ph.length == 0) ph = new OctetString(new byte[8]);
         var c_octs = serialize(c_arr).concat(i2osp(Scalar.of(BigInteger.valueOf(ph.length)),8)).concat(ph);
+        if(ph.length == 0) c_octs.concat(new OctetString(new byte[8])); // See note in draft
         return hash_to_scalar(c_octs, challenge_dst);
     }
 
@@ -189,7 +189,7 @@ public class helper {
     }
 
     private static Object[] createCArray(InitRes init_res, Vector<Integer> disclosed_indexes, Vector<Scalar> disclosed_messages){
-        Object[] c_arr = new Object[6 + disclosed_indexes.getLength() + disclosed_messages.getLength()];
+        Object[] c_arr = new Object[7 + disclosed_indexes.getLength() + disclosed_messages.getLength()];
         c_arr[0] = init_res.getAbar();
         c_arr[1] = init_res.getBbar();
         c_arr[2] = init_res.getD();
@@ -197,7 +197,7 @@ public class helper {
         c_arr[4] = init_res.getT2();
         c_arr[5] = disclosed_indexes.getLength();
         for (int i = 1; i <= disclosed_indexes.getLength() ; i++) {
-            c_arr[i+5] = disclosed_indexes.getValue(i);
+            c_arr[i+5] = disclosed_indexes.getValue(i)-1;
         }
         for (int i = 1; i <= disclosed_messages.getLength() ; i++) {
             c_arr[i+disclosed_indexes.getLength()+5] = disclosed_messages.getValue(i);
