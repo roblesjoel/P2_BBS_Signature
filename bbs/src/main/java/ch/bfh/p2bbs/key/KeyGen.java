@@ -13,7 +13,8 @@ import static ch.bfh.p2bbs.utils.helper.*;
 public class KeyGen {
     // see: https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-bbs-signatures-05#name-secret-key
     public static Scalar KeyGen(OctetString key_material, OctetString key_info, OctetString key_dst) {
-        if(key_dst.length == 0) key_dst = CIPHERSUITE_ID.concat("KEYGEN_DST_", StandardCharsets.US_ASCII);
+        var api_id =  CIPHERSUITE_ID.concat("H2G_HM2S_", StandardCharsets.US_ASCII);
+        if(key_dst.length == 0) key_dst = api_id.concat("KEYGEN_DST_", StandardCharsets.US_ASCII);
         if(key_material.length < 32) return Scalar.INVALID;
         if(key_info.length > 65535) return Scalar.INVALID;
         var derive_input = key_material.concat(i2osp(Scalar.of(BigInteger.valueOf(key_info.length)), 2)).concat(key_info);

@@ -8,15 +8,15 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="01f2069e-28ec-457e-9a58-088c57d48379" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/test/java/ch/bfh/p2bbs/proof/ProofVerifyTest.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/pom.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/ch/bfh/p2bbs/MainBBS.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/ch/bfh/p2bbs/MainBBS.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/ch/bfh/p2bbs/Types/InitRes.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/ch/bfh/p2bbs/Types/InitRes.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/ch/bfh/p2bbs/proof/ProofGen.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/ch/bfh/p2bbs/proof/ProofGen.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/ch/bfh/p2bbs/key/KeyGen.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/ch/bfh/p2bbs/key/KeyGen.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/ch/bfh/p2bbs/proof/ProofVerify.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/ch/bfh/p2bbs/proof/ProofVerify.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/ch/bfh/p2bbs/utils/helper.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/ch/bfh/p2bbs/utils/helper.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/java/ch/bfh/p2bbs/key/KeyGenTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/ch/bfh/p2bbs/key/KeyGenTest.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/test/java/ch/bfh/p2bbs/proof/ProofGenTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/ch/bfh/p2bbs/proof/ProofGenTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/java/ch/bfh/p2bbs/signature/SignTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/ch/bfh/p2bbs/signature/SignTest.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/test/java/ch/bfh/p2bbs/utils/helperTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/ch/bfh/p2bbs/utils/helperTest.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -28,6 +28,7 @@
     <option name="RECENT_TEMPLATES">
       <list>
         <option value="JUnit5 Test Class" />
+        <option value="Class" />
       </list>
     </option>
   </component>
@@ -51,19 +52,27 @@
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
     "Application.MainBBS.executor": "Debug",
+    "JUnit.KeyGenTest.checkKeyPair.executor": "Debug",
     "JUnit.KeyGenTest.executor": "Run",
-    "JUnit.ProofGenTest.ProofGen.executor": "Debug",
+    "JUnit.ProofGenTest.ProofGen.executor": "Run",
     "JUnit.ProofGenTest.ProofVerify.executor": "Debug",
     "JUnit.ProofGenTest.executor": "Run",
     "JUnit.ProofGenTest.validMultiMessageProof.executor": "Debug",
     "JUnit.ProofGenTest.validSingleMessageProof.executor": "Debug",
+    "JUnit.ProofVerifyTest.ProofVerify.executor": "Run",
+    "JUnit.ProofVerifyTest.executor": "Run",
+    "JUnit.SignTest.GenAndVerifySignature.executor": "Debug",
     "JUnit.SignTest.checkMultiMessageSignature.executor": "Debug",
     "JUnit.SignTest.checkSingleMessageSignature.executor": "Debug",
     "JUnit.SignTest.executor": "Run",
+    "JUnit.helperTest.checkGenerators.executor": "Debug",
     "JUnit.helperTest.executor": "Run",
     "JUnit.helperTest.hastToScalarTest.executor": "Run",
+    "JUnit.helperTest.messageToScalarAsHashTest.executor": "Debug",
+    "JUnit.helperTest.mockedRngTest.executor": "Debug",
     "Maven.bbs [clean].executor": "Run",
     "Maven.bbs [package].executor": "Run",
+    "Maven.bbs [test].executor": "Run",
     "Maven.bbs [validate].executor": "Run",
     "RunOnceActivity.OpenProjectViewOnStart": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
@@ -96,7 +105,7 @@
       <recent name="ch.bfh.p2bbs.key" />
     </key>
   </component>
-  <component name="RunManager" selected="JUnit.ProofGenTest.ProofVerify">
+  <component name="RunManager" selected="JUnit.SignTest.GenAndVerifySignature">
     <configuration name="ProofGenTest.ProofGen" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
       <module name="bbs" />
       <extension name="coverage">
@@ -113,7 +122,7 @@
         <option name="Make" enabled="true" />
       </method>
     </configuration>
-    <configuration name="ProofGenTest.ProofVerify" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+    <configuration name="ProofVerifyTest" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
       <module name="bbs" />
       <extension name="coverage">
         <pattern>
@@ -122,46 +131,29 @@
         </pattern>
       </extension>
       <option name="PACKAGE_NAME" value="ch.bfh.p2bbs.proof" />
-      <option name="MAIN_CLASS_NAME" value="ch.bfh.p2bbs.proof.ProofGenTest" />
-      <option name="METHOD_NAME" value="ProofVerify" />
-      <option name="TEST_OBJECT" value="method" />
+      <option name="MAIN_CLASS_NAME" value="ch.bfh.p2bbs.proof.ProofVerifyTest" />
+      <option name="TEST_OBJECT" value="class" />
       <method v="2">
         <option name="Make" enabled="true" />
       </method>
     </configuration>
-    <configuration name="ProofGenTest.validMultiMessageProof" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+    <configuration name="SignTest.GenAndVerifySignature" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
       <module name="bbs" />
       <extension name="coverage">
         <pattern>
-          <option name="PATTERN" value="ch.bfh.p2bbs.proof.*" />
+          <option name="PATTERN" value="ch.bfh.p2bbs.signature.*" />
           <option name="ENABLED" value="true" />
         </pattern>
       </extension>
-      <option name="PACKAGE_NAME" value="ch.bfh.p2bbs.proof" />
-      <option name="MAIN_CLASS_NAME" value="ch.bfh.p2bbs.proof.ProofGenTest" />
-      <option name="METHOD_NAME" value="validMultiMessageProof" />
+      <option name="PACKAGE_NAME" value="ch.bfh.p2bbs.signature" />
+      <option name="MAIN_CLASS_NAME" value="ch.bfh.p2bbs.signature.SignTest" />
+      <option name="METHOD_NAME" value="GenAndVerifySignature" />
       <option name="TEST_OBJECT" value="method" />
       <method v="2">
         <option name="Make" enabled="true" />
       </method>
     </configuration>
-    <configuration name="ProofGenTest.validSingleMessageProof" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
-      <module name="bbs" />
-      <extension name="coverage">
-        <pattern>
-          <option name="PATTERN" value="ch.bfh.p2bbs.proof.*" />
-          <option name="ENABLED" value="true" />
-        </pattern>
-      </extension>
-      <option name="PACKAGE_NAME" value="ch.bfh.p2bbs.proof" />
-      <option name="MAIN_CLASS_NAME" value="ch.bfh.p2bbs.proof.ProofGenTest" />
-      <option name="METHOD_NAME" value="validSingleMessageProof" />
-      <option name="TEST_OBJECT" value="method" />
-      <method v="2">
-        <option name="Make" enabled="true" />
-      </method>
-    </configuration>
-    <configuration name="helperTest.hastToScalarTest" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+    <configuration name="helperTest.messageToScalarAsHashTest" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
       <module name="bbs" />
       <extension name="coverage">
         <pattern>
@@ -171,7 +163,23 @@
       </extension>
       <option name="PACKAGE_NAME" value="ch.bfh.p2bbs.utils" />
       <option name="MAIN_CLASS_NAME" value="ch.bfh.p2bbs.utils.helperTest" />
-      <option name="METHOD_NAME" value="hastToScalarTest" />
+      <option name="METHOD_NAME" value="messageToScalarAsHashTest" />
+      <option name="TEST_OBJECT" value="method" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="helperTest.mockedRngTest" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="bbs" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="ch.bfh.p2bbs.utils.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <option name="PACKAGE_NAME" value="ch.bfh.p2bbs.utils" />
+      <option name="MAIN_CLASS_NAME" value="ch.bfh.p2bbs.utils.helperTest" />
+      <option name="METHOD_NAME" value="mockedRngTest" />
       <option name="TEST_OBJECT" value="method" />
       <method v="2">
         <option name="Make" enabled="true" />
@@ -179,11 +187,11 @@
     </configuration>
     <recent_temporary>
       <list>
-        <item itemvalue="JUnit.ProofGenTest.ProofVerify" />
+        <item itemvalue="JUnit.SignTest.GenAndVerifySignature" />
+        <item itemvalue="JUnit.helperTest.mockedRngTest" />
         <item itemvalue="JUnit.ProofGenTest.ProofGen" />
-        <item itemvalue="JUnit.ProofGenTest.validMultiMessageProof" />
-        <item itemvalue="JUnit.ProofGenTest.validSingleMessageProof" />
-        <item itemvalue="JUnit.helperTest.hastToScalarTest" />
+        <item itemvalue="JUnit.ProofVerifyTest" />
+        <item itemvalue="JUnit.helperTest.messageToScalarAsHashTest" />
       </list>
     </recent_temporary>
   </component>
@@ -206,7 +214,7 @@
       <workItem from="1705526425968" duration="26000" />
       <workItem from="1705526491556" duration="27144000" />
       <workItem from="1707686829772" duration="1496000" />
-      <workItem from="1707688956897" duration="39769000" />
+      <workItem from="1707688956897" duration="47761000" />
     </task>
     <servers />
   </component>
@@ -214,6 +222,18 @@
     <option name="version" value="3" />
   </component>
   <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>jar://$MAVEN_REPOSITORY$/io/gitlab/openchvote/utilities/1.2.2/utilities-1.2.2-sources.jar!/ch/openchvote/util/sequence/Vector.java</url>
+          <line>170</line>
+          <properties>
+            <option name="lambda-ordinal" value="-1" />
+          </properties>
+          <option name="timeStamp" value="231" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
     <pin-to-top-manager>
       <pinned-members>
         <PinnedItemInfo parentTag="ch.bfh.hnr1.bls.Params$G1" memberName="DST_hash" />

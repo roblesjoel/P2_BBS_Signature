@@ -22,7 +22,7 @@ public class ProofVerify {
     }
 
     // see: https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-bbs-signatures-05#name-coreproofverify
-    public static boolean CoreProofVerify(OctetString publicKey, OctetString proof_octets, Vector<G1Point> generators, OctetString header, OctetString ph, Vector<Scalar> disclosed_messages, Vector<Integer> disclosed_indexes, OctetString api_id) {
+    private static boolean CoreProofVerify(OctetString publicKey, OctetString proof_octets, Vector<G1Point> generators, OctetString header, OctetString ph, Vector<Scalar> disclosed_messages, Vector<Integer> disclosed_indexes, OctetString api_id) {
         var proof_result = octets_to_proof(proof_octets);
         if(proof_result.isInvalid()) return false;
         var Abar = proof_result.getAbar();
@@ -40,7 +40,7 @@ public class ProofVerify {
     }
 
     // see: https://datatracker.ietf.org/doc/html/draft-irtf-cfrg-bbs-signatures-05#name-proof-verification-initiali
-    public static InitRes ProofVerifyInit(OctetString PK, Proof proof, Vector<G1Point> generators, OctetString header, Vector<Scalar> disclosed_messages, Vector<Integer> disclosed_indexes, OctetString api_id) {
+    private static InitRes ProofVerifyInit(OctetString PK, Proof proof, Vector<G1Point> generators, OctetString header, Vector<Scalar> disclosed_messages, Vector<Integer> disclosed_indexes, OctetString api_id) {
         var Abar = proof.getAbar();
         var Bbar = proof.getBbar();
         var D = proof.getD();
@@ -72,7 +72,7 @@ public class ProofVerify {
         return new InitRes(Abar, Bbar, D, T1, T2, domain);
     }
 
-    public static Vector<Integer> splitIndexes(Vector<Integer> disclosed_indexes, int L, int U){
+    private static Vector<Integer> splitIndexes(Vector<Integer> disclosed_indexes, int L, int U){
         var builder = new Vector.Builder<Integer>(U);
         for (int i = 1; i <= L; i++) {
             var found = false;
@@ -87,7 +87,7 @@ public class ProofVerify {
         return builder.build();
     }
 
-    public static Vector<G1Point> getIndexedGenerators(Vector<G1Point> generators, Vector<Integer> indexes){
+    private static Vector<G1Point> getIndexedGenerators(Vector<G1Point> generators, Vector<Integer> indexes){
         var builder = new Vector.Builder<G1Point>(indexes.getLength());
         for (int disclosedIndex: indexes) {
             builder.addValue(generators.getValue(disclosedIndex));
