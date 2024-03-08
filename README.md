@@ -13,8 +13,8 @@ All test vectors of the Version 5 of the [BBS Draft](https://datatracker.ietf.or
 
 The crypto Library we used is developed by Prof. Dr. Rolf Haenni.
 To use the Library follow these easy steps:
-1. Move into the bbs/src/main/resources
-2. run `mvn clean install`
+1. Go into the `bbs`folder
+2. Run `mvn install:install-file -Dfile=./src/main/resources/src/BLS12-381-1.0.5.jar -DpomFile=./src/main/resources/pom.xml`
 
 ### Download and install the verificatum package
 
