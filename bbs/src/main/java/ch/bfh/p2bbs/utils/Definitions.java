@@ -1,6 +1,7 @@
 package ch.bfh.p2bbs.utils;
 
-import ch.bfh.hnr1.bls.*;
+
+import ch.bfh.evg.bls.*;
 import ch.bfh.p2bbs.Types.G1Point;
 import ch.bfh.p2bbs.Types.OctetString;
 

@@ -1,24 +1,24 @@
 package ch.bfh.p2bbs.Types;
 
-import ch.bfh.hnr1.element.ECPoint;
-import ch.bfh.hnr1.element.FpElement;
-import ch.bfh.hnr1.field.Fp;
+import ch.bfh.evg.element.ECPoint;
+import ch.bfh.evg.element.FpElement;
+import ch.bfh.evg.field.Fp;
 import ch.openchvote.util.sequence.Vector;
 
 import static ch.bfh.p2bbs.utils.Definitions.*;
 
 public class G1Point extends ECPoint<FpElement, Fp> {
-    private final ch.bfh.hnr1.element.G1Point point;
+    private final ch.bfh.evg.element.G1Point point;
     public static final G1Point GENERATOR = new G1Point((ECPoint<FpElement, Fp>) G1.getGenerator(), (Fp) G1.getField());
     public static final G1Point ZERO = GENERATOR.subtract(GENERATOR);
     public G1Point(ECPoint<FpElement, Fp> point, Fp field){
         super(field, point.get_X(), point.get_Y(), point.get_Z());
-        this.point = (ch.bfh.hnr1.element.G1Point) point;
+        this.point = (ch.bfh.evg.element.G1Point) point;
     }
 
     public G1Point(ECPoint<FpElement, Fp> point){
         super((Fp) G1.getField(), point.get_X(), point.get_Y(), point.get_Z());
-        this.point = (ch.bfh.hnr1.element.G1Point) point;
+        this.point = (ch.bfh.evg.element.G1Point) point;
     }
 
     public G1Point(){

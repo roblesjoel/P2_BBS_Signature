@@ -38,9 +38,9 @@
             <version>1.77</version>
         </dependency>
         <dependency>
-            <groupId>ch.bfh.hnr1</groupId>
+            <groupId>ch.bfh.evg</groupId>
             <artifactId>BLS12-381</artifactId>
-            <version>1.0.4-SNAPSHOT</version>
+            <version>1.0.5</version>
         </dependency>
         <dependency>
             <groupId>com.googlecode.json-simple</groupId>

@@ -8,7 +8,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.function.Function;
 import java.util.function.IntConsumer;
 
-import static ch.bfh.hnr1.util.Hash.expandMessageXMD_SHA_256;
+import static ch.bfh.evg.util.Hash.expandMessageXMD_SHA_256;
 import static ch.bfh.p2bbs.utils.Definitions.*;
 import static ch.bfh.p2bbs.utils.helper.*;
 

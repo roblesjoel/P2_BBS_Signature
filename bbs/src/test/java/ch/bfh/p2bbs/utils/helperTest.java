@@ -1,11 +1,8 @@
 package ch.bfh.p2bbs.utils;
 
-import ch.bfh.hnr1.bls.BLS;
 import ch.bfh.p2bbs.Types.G1Point;
 import ch.bfh.p2bbs.Types.OctetString;
 import ch.bfh.p2bbs.Types.Scalar;
-import ch.bfh.p2bbs.excptions.Abort;
-import ch.bfh.p2bbs.key.KeyGen;
 import ch.openchvote.util.sequence.Vector;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -19,9 +16,6 @@ import java.io.IOException;
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 
-import static ch.bfh.hnr1.util.Hash.expandMessageXMD_SHA_256;
-import static ch.bfh.p2bbs.utils.Definitions.Expand_Len;
-import static ch.bfh.p2bbs.utils.Definitions.r;
 import static ch.bfh.p2bbs.utils.helper.*;
 import static org.junit.jupiter.api.Assertions.*;
 

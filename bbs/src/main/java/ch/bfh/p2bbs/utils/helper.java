@@ -10,7 +10,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 
-import static ch.bfh.hnr1.util.Hash.expandMessageXMD_SHA_256;
+import static ch.bfh.evg.util.Hash.expandMessageXMD_SHA_256;
 import static ch.bfh.p2bbs.utils.Definitions.*;
 
 public class helper {

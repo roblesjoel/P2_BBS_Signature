@@ -1,27 +1,27 @@
 package ch.bfh.p2bbs.Types;
 
-import ch.bfh.hnr1.element.ECPoint;
-import ch.bfh.hnr1.element.Fp2Element;
-import ch.bfh.hnr1.field.Fp2;
+import ch.bfh.evg.element.ECPoint;
+import ch.bfh.evg.element.Fp2Element;
+import ch.bfh.evg.field.Fp2;
 
 import static ch.bfh.p2bbs.utils.Definitions.G2;
 
 public class G2Point extends ECPoint<Fp2Element, Fp2> {
 
-    private final ch.bfh.hnr1.element.G2Point point;
+    private final ch.bfh.evg.element.G2Point point;
     public static final G2Point GENERATOR = new G2Point((ECPoint<Fp2Element, Fp2>) G2.getGenerator(), (Fp2) G2.getField());
 
     public G2Point(ECPoint<Fp2Element, Fp2> point, Fp2 field){
         super(field, point.get_X(), point.get_Y(), point.get_Z());
-        this.point = (ch.bfh.hnr1.element.G2Point) point;
+        this.point = (ch.bfh.evg.element.G2Point) point;
     }
 
     private G2Point(ECPoint<Fp2Element, Fp2> point){
         super((Fp2) G2.getField(), point.get_X(), point.get_Y(), point.get_Z());
-        this.point = (ch.bfh.hnr1.element.G2Point) point;
+        this.point = (ch.bfh.evg.element.G2Point) point;
     }
 
-    public ch.bfh.hnr1.element.G2Point getPoint(){
+    public ch.bfh.evg.element.G2Point getPoint(){
         return point;
     }
 
