@@ -14,7 +14,7 @@ jobs:
       - name: Compile LaTeX document
         uses: xu-cheng/latex-action@v3
         with:
-          working_directory: /docs
+          working_directory: ./docs
           root_file: BBSUsecases.tex
       - name: Upload PDF file
         uses: actions/upload-artifact@v3
