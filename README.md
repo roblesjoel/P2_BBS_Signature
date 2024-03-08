@@ -5,16 +5,16 @@ Please contact [Joel Robles](mailto:joelgabriel.roblesgasser@students.bfh.ch) or
 
 # Test Vectors
 
-All test vectors mentioned in the draft are implemented.
-For some tests we have not yet found out why they don't pass.
-Sadly due to time constraints as the semester comes to an end, these errors will be adressed in the future.
+All test vectors of the Version 5 of the [BBS Draft](https://datatracker.ietf.org/doc/draft-irtf-cfrg-bbs-signatures/) are implemented and passing.
 
 # How to play around with the implementation
 
 ### Crypto Library
 
 The crypto Library we used is developed by Prof. Dr. Rolf Haenni.
-If you wish to play around with this implementation, please contact [Joel Robles](mailto:joelgabriel.roblesgasser@students.bfh.ch) or [Miguel Schweizer](mailto:miguelangel.schweizer@students.bfh.ch) so we can provide you the with current Crypto Library version.
+To use the Library follow these easy steps:
+1. Move into the bbs/src/main/resources
+2. run `mvn clean install`
 
 ### Download and install the verificatum package
 
