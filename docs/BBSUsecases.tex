@@ -20,8 +20,29 @@
 \usepackage{glossaries}
 \usepackage{biblatex}
 \usepackage{xcolor}
+\usepackage[utf8]{inputenc}
 \addbibresource{references.bib}
 \makeglossaries
+
+\newglossaryentry{IETF}{
+name=IETF,
+description={Internet Engineering Task Force, It's an organisation for further developing the internet}
+}
+
+\newglossaryentry{W3C}{
+name=W3C,
+description={World Wide Web Consortium, They develop standards and guidelines for the web}
+}
+
+\newglossaryentry{Zcash protocol}{
+name=Zcash protocol,
+description={privacy focused cryptocurrency that uses a protocol named zk-SNARKs}
+}
+
+\newglossaryentry{BBS}{
+name=BBS,
+description={short term use of BBS signature scheme}
+}
 
 \title{BBS Signature Scheme: From Theory to Implementation}
 \author{Joel Gabriel Robles Gasser \& Miguel Angel Schweizer\\[1cm]{\small Advisors: Prof. Dr. Reto Koenig \& Prof. Dr. Rolf Haenni}}
@@ -338,28 +359,7 @@ We would like to express our gratitude to our supervising professors Prof. Dr. R
 Special thanks go to Prof. Dr. Rolf Haenni for implementing and giving us access to his personal library and adapt it to our code. \\
 We also would like to acknowledge the support of Prof. Dr. Annett Laube. \newpage
 
-\newglossaryentry{IETF}{
-name=IETF,
-description={Internet Engineering Task Force, It's an organisation for further developing the internet}
-}
-
-\newglossaryentry{W3C}{
-name=W3C,
-description={World Wide Web Consortium, They develop standards and guidelines for the web}
-}
-
-
-\newglossaryentry{Zcash protocol}{
-name=Zcash protocol,
-description={privacy focused cryptocurrency that uses a protocol named zk-SNARKs}
-}
-
-\newglossaryentry{BBS}{
-name=BBS,
-description={short term use of BBS signature scheme}
-}
-
-
+\clearpage
 \printglossaries
 \printbibliography
 
