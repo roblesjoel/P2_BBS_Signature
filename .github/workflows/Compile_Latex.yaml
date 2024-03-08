@@ -1,5 +1,4 @@
 name: Build LaTeX document
-on: [pull_request]
 on: 
   pull_request:
   push:
